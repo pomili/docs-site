@@ -1,0 +1,47 @@
+---
+slug: hello-docusaurus
+title: 使用 Docusaurus 搭建个人文档站点
+authors: pomili
+tags: [docusaurus, 前端]
+---
+
+从零开始，用 Docusaurus 搭建了一个个人文档站点。
+
+{/* truncate */}
+
+## 为什么选 Docusaurus
+
+Docusaurus 是 Meta 开源的静态站点生成器，基于 React 构建，专为技术文档设计：
+
+- **MDX 支持** — Markdown + JSX，文档里可以嵌入 React 组件
+- **开箱即用** — 搜索、版本管理、i18n、暗色模式全部内置
+- **React 生态** — 可以自由扩展自定义组件
+- **静态构建** — 纯静态产物，部署到任何托管平台
+
+## 搭建过程
+
+几行命令就完成了初始化：
+
+```bash
+npx create-docusaurus@latest docs-site classic --typescript
+cd docs-site
+npm start
+```
+
+本地开发服务器跑在 `http://localhost:3000/`，修改文档实时热更新。
+
+## 配置要点
+
+核心配置文件是 `docusaurus.config.ts`，几个关键点：
+
+1. **baseUrl** — 本地用 `/`，部署到 GitHub Pages 需要改为仓库名，如 `/docs-site/`
+2. **i18n** — 中文站点设置 `defaultLocale: 'zh-Hans'`
+3. **主题定制** — 通过 `custom.css` 覆盖 Infima 变量，实现自定义配色
+
+## 部署
+
+使用 GitHub Actions 自动部署到 GitHub Pages，推送即发布，无需手动操作。
+
+---
+
+这只是开始。后面会陆续补充更多内容，记录学习与开发的过程。
