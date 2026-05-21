@@ -16,7 +16,7 @@ const config: Config = {
 
   // Set the production url of your site here
   url: 'https://pomili.github.io',
-  baseUrl: '/docs-site/',
+  baseUrl: '/',
 
   organizationName: 'pomili',
   projectName: 'docs-site',
