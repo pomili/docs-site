@@ -1,0 +1,209 @@
+---
+sidebar_position: 1
+---
+
+# 部署 Docusaurus
+
+## 环境准备
+
+Docusaurus 是基于 React 的静态站点生成器，需要 Node.js 环境。
+
+```bash
+# 检查 Node.js 版本（需 >= 20.0）
+node --version
+```
+
+如果未安装，请访问 [Node.js 官网](https://nodejs.org/) 下载安装。
+
+## 创建项目
+
+使用脚手架一键创建：
+
+```bash
+npx create-docusaurus@latest my-website classic
+```
+
+- `my-website`：项目名称，可自定义
+- `classic`：使用经典模板，也可以选 `facebook`（仅文档）
+
+## 项目结构
+
+```plaintext
+my-website/
+├── blog/                  # 博客文章（可选禁用）
+├── docs/                  # 文档目录
+├── src/
+│   ├── components/        # 自定义 React 组件
+│   ├── css/               # 自定义样式
+│   └── pages/             # 独立页面
+├── static/                # 静态资源（图片、favicon等）
+├── docusaurus.config.ts   # 站点配置文件
+├── sidebars.ts            # 侧边栏配置
+└── package.json
+```
+
+## 核心配置
+
+编辑 `docusaurus.config.ts`：
+
+```ts
+const config: Config = {
+  title: '我的文档站点',
+  tagline: '基于 Docusaurus 搭建',
+  url: 'https://your-username.github.io',
+  baseUrl: '/',
+  organizationName: 'your-username',
+  projectName: 'your-repo-name',
+
+  i18n: {
+    defaultLocale: 'zh-Hans',
+    locales: ['zh-Hans'],
+  },
+  // ...
+};
+```
+
+- `url`：部署后的访问地址
+- `baseUrl`：如果是 `https://xxx.github.io/my-repo/`，则设为 `/my-repo/`
+- `i18n`：设置中文，去掉英文语言
+
+## 本地开发
+
+```bash
+cd my-website
+npm start
+```
+
+访问 http://localhost:3000 ，修改文档后浏览器自动刷新。
+
+## 编写文档
+
+在 `docs/` 目录下创建 `.md` 或 `.mdx` 文件，文件头部添加：
+
+```yaml
+---
+sidebar_position: 1   # 侧边栏排序
+---
+```
+
+文档之间通过 Markdown 链接引用：
+
+```md
+[部署指南](./deploy-docusaurus)
+```
+
+如果想分组，创建子目录并加入 `_category_.json`：
+
+```json
+{
+  "label": "入门指南",
+  "position": 1
+}
+```
+
+## 构建生产版本
+
+```bash
+npm run build
+```
+
+产物在 `build/` 目录，即为纯静态文件，可部署到任意静态托管服务。
+
+本地预览构建结果：
+
+```bash
+npm run serve
+```
+
+## 部署到 GitHub Pages
+
+### 方式一：使用 gh-pages
+
+```bash
+npm install --save-dev gh-pages
+```
+
+在 `package.json` 中添加脚本：
+
+```json
+{
+  "scripts": {
+    "deploy": "npm run build && gh-pages -d build"
+  }
+}
+```
+
+然后运行：
+
+```bash
+npm run deploy
+```
+
+### 方式二：GitHub Actions（推荐）
+
+在项目根目录创建 `.github/workflows/deploy.yml`：
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+```
+
+推送代码到 GitHub 后，在仓库 Settings → Pages 中，将 Source 设为 `gh-pages` 分支。
+
+### 方式三：通过 Git 推送
+
+项目自带的 `npm run deploy` 命令使用环境变量配置：
+
+```bash
+# 设置环境变量
+export GIT_USER=<your-github-username>
+export GIT_PASS=<your-github-token>
+
+npm run deploy
+```
+
+该命令会自动构建并将 `build/` 推送到远程仓库的 `gh-pages` 分支。
+
+## 部署到 Vercel
+
+1. 将代码推送到 GitHub
+2. 在 [Vercel](https://vercel.com) 导入仓库
+3. 无需额外配置，Vercel 自动识别 Docusaurus 项目
+4. 每次推送自动部署
+
+## 部署到 Netlify
+
+1. 将代码推送到 GitHub
+2. 在 [Netlify](https://netlify.com) 选择 "Import from Git"
+3. 构建命令：`npm run build`
+4. 发布目录：`build`
+5. 点击 Deploy
+
+## 常见问题
+
+**Q: 图片不显示？**
+检查 `baseUrl` 配置。如果部署在 `https://user.github.io/repo/`，需要设置 `baseUrl: '/repo/'`。
+
+**Q: 路由 404？**
+Docusaurus 使用客户端路由，确保服务器配置了 SPA fallback。GitHub Pages 项目中已自带 `.nojekyll` 文件解决此问题。
+
+**Q: 如何自定义域名？**
+在 `static/` 目录下放置 `CNAME` 文件，内容为你的域名，并在 DNS 中添加相应记录。
