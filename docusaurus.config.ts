@@ -5,8 +5,8 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: '文档站点',
-  tagline: '基于 Docusaurus 搭建',
+  title: 'pomili',
+  tagline: '探索 · 构建 · 分享',
   favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -63,12 +63,13 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
-      respectPrefersColorScheme: true,
+      defaultMode: 'dark',
+      respectPrefersColorScheme: false,
     },
     navbar: {
-      title: '文档站点',
+      title: 'pomili',
       logo: {
-        alt: 'Logo',
+        alt: 'pomili',
         src: 'img/logo.svg',
       },
       items: [

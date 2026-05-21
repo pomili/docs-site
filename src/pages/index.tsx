@@ -1,31 +1,61 @@
 import type {ReactNode} from 'react';
-import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
-import HomepageFeatures from '@site/src/components/HomepageFeatures';
-import Heading from '@theme/Heading';
 
 import styles from './index.module.css';
 
-function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+function Hero() {
   return (
-    <header className={clsx('hero hero--primary', styles.heroBanner)}>
-      <div className="container">
-        <Heading as="h1" className="hero__title">
-          {siteConfig.title}
-        </Heading>
-        <p className="hero__subtitle">{siteConfig.tagline}</p>
-        <div className={styles.buttons}>
-          <Link
-            className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+    <div className={styles.hero}>
+      <div className={styles.heroInner}>
+        <p className={styles.badge}>POMILI</p>
+        <h1 className={styles.title}>
+          探索 · 构建 · 分享
+        </h1>
+        <p className={styles.subtitle}>
+          一个关于技术、代码与思考的个人空间
+        </p>
+        <div className={styles.actions}>
+          <Link className={styles.btnPrimary} to="/docs/intro">
+            阅读文档
+          </Link>
+          <Link className={styles.btnGhost} to="/blog">
+            浏览博客
           </Link>
         </div>
       </div>
-    </header>
+    </div>
+  );
+}
+
+function FeatureCard({title, desc}: {title: string; desc: string}) {
+  return (
+    <div className={styles.card}>
+      <h3 className={styles.cardTitle}>{title}</h3>
+      <p className={styles.cardDesc}>{desc}</p>
+    </div>
+  );
+}
+
+function Features() {
+  return (
+    <div className={styles.features}>
+      <div className={styles.featuresInner}>
+        <FeatureCard
+          title="文档"
+          desc="系统的技术文档和教程，记录学习与工作过程中的知识积累。"
+        />
+        <FeatureCard
+          title="博客"
+          desc="技术思考与实践记录，分享开发过程中的心得与经验。"
+        />
+        <FeatureCard
+          title="项目"
+          desc="开源项目与工具，将想法付诸实践，用代码解决问题。"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -33,12 +63,10 @@ export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
-      <HomepageHeader />
-      <main>
-        <HomepageFeatures />
-      </main>
+      title={siteConfig.title}
+      description="pomili - 探索、构建、分享">
+      <Hero />
+      <Features />
     </Layout>
   );
 }
