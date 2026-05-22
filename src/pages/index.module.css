@@ -1,5 +1,5 @@
 .hero {
-  padding: 120px 24px 100px;
+  padding: 100px 24px 80px;
   text-align: center;
 }
 
@@ -12,33 +12,45 @@
   display: inline-block;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.2em;
-  color: #d97757;
-  border: 1px solid rgba(217, 119, 87, 0.35);
+  letter-spacing: 0.15em;
+  color: #2da44e;
+  border: 1px solid #2da44e55;
   border-radius: 999px;
   padding: 4px 16px;
   margin-bottom: 32px;
 }
 
+[data-theme='dark'] .badge {
+  color: #3fb950;
+  border-color: #3fb95055;
+}
+
 .title {
-  font-size: 3.2rem;
-  font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: 0.04em;
-  color: #f0efed;
-  margin-bottom: 20px;
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #0d1117;
+  margin-bottom: 16px;
+}
+
+[data-theme='dark'] .title {
+  color: #f0f6fc;
 }
 
 .subtitle {
-  font-size: 1.15rem;
-  color: #a09e9a;
+  font-size: 1.2rem;
+  color: #656d76;
   line-height: 1.6;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
+}
+
+[data-theme='dark'] .subtitle {
+  color: #8b949e;
 }
 
 .actions {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -46,49 +58,76 @@
 .btnPrimary {
   display: inline-flex;
   align-items: center;
-  height: 44px;
-  padding: 0 24px;
-  font-size: 0.9rem;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #0d0d0c;
-  background: #d97757;
-  border-radius: 10px;
-  border: none;
+  color: #fff;
+  background: #2da44e;
+  border: 1px solid #2da44e;
+  border-radius: 6px;
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: background 0.15s;
 }
 
 .btnPrimary:hover {
-  opacity: 0.85;
-  color: #0d0d0c;
+  background: #2c974b;
+  color: #fff;
   text-decoration: none;
+}
+
+[data-theme='dark'] .btnPrimary {
+  background: #238636;
+  border-color: #238636;
+}
+
+[data-theme='dark'] .btnPrimary:hover {
+  background: #2ea043;
 }
 
 .btnGhost {
   display: inline-flex;
   align-items: center;
-  height: 44px;
-  padding: 0 24px;
-  font-size: 0.9rem;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #e8e6e3;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  color: #24292f;
+  background: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
   text-decoration: none;
-  transition: border-color 0.2s;
+  transition: background 0.15s;
 }
 
 .btnGhost:hover {
-  border-color: rgba(255, 255, 255, 0.35);
-  color: #e8e6e3;
+  background: #eaeef2;
+  color: #24292f;
   text-decoration: none;
+}
+
+[data-theme='dark'] .btnGhost {
+  color: #c9d1d9;
+  background: #21262d;
+  border-color: #30363d;
+}
+
+[data-theme='dark'] .btnGhost:hover {
+  background: #30363d;
+  color: #c9d1d9;
 }
 
 /* ---- Features ---- */
 
 .features {
   padding: 40px 24px 80px;
+  background: #f6f8fa;
+  border-top: 1px solid #d0d7de;
+}
+
+[data-theme='dark'] .features {
+  background: #161b22;
+  border-color: #30363d;
 }
 
 .featuresInner {
@@ -100,34 +139,53 @@
 }
 
 .card {
-  background: #1a1a19;
-  border: 1px solid #2a2a28;
-  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
   padding: 28px 24px;
-  transition: border-color 0.25s;
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .card:hover {
-  border-color: rgba(217, 119, 87, 0.4);
+  border-color: #8b949e;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] .card {
+  background: #0d1117;
+  border-color: #30363d;
+}
+
+[data-theme='dark'] .card:hover {
+  border-color: #6e7681;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
 .cardTitle {
   font-size: 1rem;
   font-weight: 600;
-  color: #f0efed;
+  color: #0d1117;
   margin-bottom: 8px;
+}
+
+[data-theme='dark'] .cardTitle {
+  color: #f0f6fc;
 }
 
 .cardDesc {
   font-size: 0.9rem;
-  color: #a09e9a;
+  color: #656d76;
   line-height: 1.55;
   margin: 0;
 }
 
+[data-theme='dark'] .cardDesc {
+  color: #8b949e;
+}
+
 @media screen and (max-width: 768px) {
   .title {
-    font-size: 2.2rem;
+    font-size: 2rem;
   }
 
   .featuresInner {
@@ -135,6 +193,6 @@
   }
 
   .hero {
-    padding: 80px 20px 60px;
+    padding: 64px 20px 48px;
   }
 }

@@ -1,44 +1,67 @@
-/* Claude-inspired dark theme */
+/* GitHub-inspired theme */
 :root {
-  --ifm-color-primary: #d97757;
-  --ifm-color-primary-dark: #c56a4c;
-  --ifm-color-primary-darker: #b85e42;
-  --ifm-color-primary-darkest: #9a4d35;
-  --ifm-color-primary-light: #de8a6e;
-  --ifm-color-primary-lighter: #e29780;
-  --ifm-color-primary-lightest: #eab5a6;
+  --ifm-color-primary: #2da44e;
+  --ifm-color-primary-dark: #2a9447;
+  --ifm-color-primary-darker: #268a40;
+  --ifm-color-primary-darkest: #1f7034;
+  --ifm-color-primary-light: #31b453;
+  --ifm-color-primary-lighter: #34be57;
+  --ifm-color-primary-lightest: #46cc68;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.04);
 
-  --ifm-background-color: #0d0d0c;
-  --ifm-background-surface-color: #1a1a19;
-  --ifm-navbar-background-color: #0d0d0ce6;
-  --ifm-footer-background-color: #0d0d0c;
-  --ifm-font-color-base: #e8e6e3;
-  --ifm-heading-color: #f0efed;
-  --ifm-color-content-secondary: #a09e9a;
-  --ifm-border-color: #2a2a28;
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --ifm-heading-font-family: var(--ifm-font-family-base);
+  --ifm-font-color-base: #1f2328;
+  --ifm-heading-color: #0d1117;
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #f6f8fa;
+  --ifm-navbar-background-color: #f6f8fa;
+  --ifm-footer-background-color: #f6f8fa;
+  --ifm-border-color: #d0d7de;
+  --ifm-color-content-secondary: #656d76;
+  --ifm-navbar-shadow: 0 1px 0 0 #d0d7de;
+  --ifm-toc-border-color: #d0d7de;
+  --ifm-link-color: #0969da;
+  --ifm-breadcrumb-color-active: #656d76;
+  --ifm-menu-color-active: #1f2328;
 
-  --ifm-navbar-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  --ifm-toc-border-color: #2a2a28;
+  --ifm-navbar-height: 56px;
+  --ifm-global-radius: 6px;
 }
 
-html {
-  background-color: #0d0d0c;
+[data-theme='dark'] {
+  --ifm-color-primary: #3fb950;
+  --ifm-color-primary-dark: #37ac47;
+  --ifm-color-primary-darker: #33a042;
+  --ifm-color-primary-darkest: #2a8336;
+  --ifm-color-primary-light: #4dc35e;
+  --ifm-color-primary-lighter: #57c666;
+  --ifm-color-primary-lightest: #72d07e;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+
+  --ifm-font-color-base: #e6edf3;
+  --ifm-heading-color: #f0f6fc;
+  --ifm-background-color: #0d1117;
+  --ifm-background-surface-color: #161b22;
+  --ifm-navbar-background-color: #161b22f2;
+  --ifm-footer-background-color: #161b22;
+  --ifm-border-color: #30363d;
+  --ifm-color-content-secondary: #8b949e;
+  --ifm-navbar-shadow: 0 1px 0 0 #30363d;
+  --ifm-toc-border-color: #30363d;
+  --ifm-link-color: #58a6ff;
+  --ifm-menu-color-active: #f0f6fc;
 }
 
 .navbar {
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);
 }
 
 .footer {
-  border-top: 1px solid var(--ifm-border-color);
+  color: var(--ifm-color-content-secondary);
 }
 
-/* Subtle gradient hero text */
-.hero__title {
-  background: linear-gradient(135deg, #f0efed 0%, #d97757 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.button {
+  font-weight: 500;
 }

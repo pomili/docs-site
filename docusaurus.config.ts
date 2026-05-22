@@ -63,9 +63,8 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
-      defaultMode: 'dark',
-      disableSwitch: true,
-      respectPrefersColorScheme: false,
+      defaultMode: 'light',
+      respectPrefersColorScheme: true,
     },
     navbar: {
       title: 'pomili',
