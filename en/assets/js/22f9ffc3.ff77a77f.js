@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkusers_pomili_code_web_docs_site=self.webpackChunkusers_pomili_code_web_docs_site||[]).push([["8915"],{6004(e){e.exports=JSON.parse('{"metadata":{"permalink":"/en/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":2,"blogDescription":"Blog","blogTitle":"Blog"}}')}}]);
