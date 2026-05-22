@@ -7,3 +7,13 @@ docusaurus:
   label: 前端
   permalink: /frontend
   description: 前端开发相关文章
+
+机器学习:
+  label: 机器学习
+  permalink: /machine-learning
+  description: 机器学习相关文章
+
+AI:
+  label: AI
+  permalink: /ai
+  description: 人工智能相关文章

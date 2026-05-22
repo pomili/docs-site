@@ -1,0 +1,178 @@
+---
+slug: ml-roadmap
+title: 机器学习学习路线：从入门到实践
+authors: pomili
+tags: [机器学习, AI]
+---
+
+从数学基础到工程落地，分享一条可执行的机器学习学习路线。
+
+{/* truncate */}
+
+## 第一阶段：数学基础
+
+ML 的核心是数学，建议优先掌握以下内容：
+
+### 线性代数
+
+- 向量、矩阵、张量的基本运算
+- 特征值和特征向量（理解 PCA 的关键）
+- 矩阵分解（SVD、QR）
+
+推荐资源：3Blue1Brown 的 [线性代数的本质](https://www.3blue1brown.com/topics/linear-algebra) 系列视频。
+
+### 概率论与统计
+
+- 概率分布（高斯、伯努利、多项）
+- 贝叶斯定理
+- 最大似然估计（MLE）和最大后验估计（MAP）
+- 期望、方差、协方差
+
+### 微积分
+
+- 导数和偏导数
+- 链式法则（反向传播的基础）
+- 梯度下降的几何理解
+- 雅可比矩阵和海森矩阵（了解即可）
+
+> **建议**：不要等数学全学完再开始写代码，数学和编程同步进行，遇到不懂的再回头补。
+
+## 第二阶段：编程工具
+
+### Python
+
+ML 领域的通用语言，重点掌握：
+
+- NumPy — 矩阵运算和广播机制
+- Pandas — 数据清洗和特征工程
+- Matplotlib / Seaborn — 数据可视化
+- Scikit-learn — 经典 ML 算法的统一接口
+
+### 深度学习框架
+
+二选一入门，后期两个都要了解：
+
+- **PyTorch**（推荐）— 动态计算图，调试友好，学术界主流
+- **TensorFlow / Keras** — 工业界部署成熟，生态完善
+
+## 第三阶段：经典机器学习
+
+先掌握传统 ML 再进入深度学习，很多思想是相通的：
+
+### 监督学习
+
+| 算法 | 核心思想 | 适用场景 |
+|------|---------|---------|
+| 线性回归 | 最小二乘法 | 连续值预测 |
+| 逻辑回归 | Sigmoid + 交叉熵 | 二分类基线 |
+| 决策树 / 随机森林 | 信息增益 + 集成 | 表格数据 |
+| XGBoost / LightGBM | 梯度提升树 | Kaggle 竞赛首选 |
+| SVM | 最大间隔分类 | 小样本高维数据 |
+| KNN | 距离度量 | 简单分类/回归 |
+
+### 无监督学习
+
+- K-Means 聚类
+- DBSCAN（基于密度的聚类）
+- PCA 降维
+- t-SNE / UMAP 可视化
+
+### 核心概念
+
+- 偏差-方差权衡
+- 过拟合与正则化（L1/L2）
+- 交叉验证
+- 特征工程与特征选择
+- 模型评估指标（准确率、精确率、召回率、F1、AUC-ROC）
+
+## 第四阶段：深度学习
+
+### 基础组件
+
+- 全连接网络（MLP）
+- 激活函数：ReLU、GELU、Sigmoid、Tanh
+- 损失函数：交叉熵、MSE、Hinge Loss
+- 优化器：SGD、Adam、AdamW
+- 正则化：Dropout、Batch Normalization、Layer Normalization
+- 学习率调度与早停（Early Stopping）
+
+### 计算机视觉（CV）
+
+- CNN 基础：卷积、池化、感受野
+- 经典架构：LeNet → AlexNet → VGG → ResNet → EfficientNet
+- 目标检测：YOLO 系列
+- 图像分割：U-Net
+- 数据增强
+
+### 自然语言处理（NLP）
+
+- 词向量：Word2Vec、GloVe
+- RNN / LSTM / GRU
+- Seq2Seq + Attention
+- Transformer 架构（彻底理解这篇论文）
+- BERT / GPT 系列
+- 大模型时代：Prompt Engineering、RAG、Fine-tuning
+
+### 生成模型
+
+- GAN
+- VAE
+- Diffusion Models（Stable Diffusion）
+- 自回归模型
+
+## 第五阶段：工程实践
+
+### 必做项目（由浅入深）
+
+1. 用 Scikit-learn 做完整的分类/回归 pipeline（数据清洗 → 特征工程 → 训练 → 评估）
+2. 手写数字识别（MNIST）— CNN 入门
+3. 图像分类（CIFAR-10/CIFAR-100）— 学习训练调参
+4. 文本分类 / 情感分析 — NLP 入门
+5. Kaggle 比赛（从 Tabular Playground 开始）
+6. 部署一个模型作为 API 服务
+
+### MLOps 技能
+
+- 实验追踪：MLflow、Weights & Biases
+- 数据版本管理：DVC
+- 模型部署：FastAPI、Docker
+- 模型服务：TorchServe、Triton Inference Server
+- 工作流编排：Airflow
+
+## 学习资源推荐
+
+### 课程
+
+| 课程 | 难度 | 特点 |
+|------|------|------|
+| 吴恩达 Machine Learning | 入门 | 经典课程，理论扎实 |
+| 吴恩达 Deep Learning Specialization | 入门 | 偏代码，适合快速上手 |
+| 李宏毅 ML 课程 | 入门-中级 | 中文授课，讲解生动 |
+| CS231n (Stanford) | 中级 | 计算机视觉方向 |
+| CS224n (Stanford) | 中级 | NLP 方向 |
+| 李沐《动手学深度学习》| 入门-中级 | 中文教材，代码驱动 |
+
+### 书籍
+
+- 《统计学习方法》李航 — 经典 ML 理论
+- 《机器学习》周志华（西瓜书）— 全面覆盖
+- 《动手学深度学习》(d2l.ai) — 代码 + 理论，强烈推荐
+- 《深度学习》(花书) — 适合进阶查阅，不适合入门
+
+### 实践平台
+
+- **Kaggle** — 比赛 + 数据集 + Notebook
+- **Papers With Code** — 论文 + 复现代码
+- **Hugging Face** — 模型和数据集社区
+
+## 学习建议
+
+1. **代码驱动**：看视频/读书的同时一定要动手写代码，理论看懂和能跑通是两回事。
+2. **做项目而不是刷课程**：完成一个完整项目比上完十门课更有价值。
+3. **读论文**：养成读论文的习惯，从经典论文开始（ResNet、Transformer、BERT）。
+4. **写博客记录**：把学到的内容用自己的话写出来，教是最好的学。
+5. **保持耐心**：ML 领域知识更新快，关注基础原理而非追逐每个新热点。
+
+---
+
+学习路线不是线性的，不同阶段之间会有交叉和往复。关键是保持持续学习的节奏，每天进步一点。
