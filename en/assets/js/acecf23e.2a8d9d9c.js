@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkusers_pomili_code_web_docs_site=self.webpackChunkusers_pomili_code_web_docs_site||[]).push([["220"],{1912(e){e.exports=JSON.parse('{"blogBasePath":"/en/blog","blogTitle":"Blog","authorsListPath":"/en/blog/authors"}')}}]);
