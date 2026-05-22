@@ -1,0 +1,199 @@
+---
+sidebar_position: 13
+---
+
+# 卷积神经网络（CNN）
+
+CNN 是计算机视觉的基石架构，通过卷积操作高效提取图像的局部特征。
+
+## 核心思想
+
+全连接层处理图像的问题：
+- 28×28 的小图展开就是 784 个输入 → 参数量爆炸
+- 无视像素的空间位置关系
+
+CNN 两大法宝：
+1. **局部连接**（卷积核只在局部窗口内连接）— 大幅减少参数
+2. **权重共享**（同一个卷积核滑过整张图）— 进一步减少参数，且具有平移不变性
+
+## 卷积层
+
+一个 3×3 的卷积核在图像上滑动，每次做元素乘法再求和：
+
+```python
+import torch
+import torch.nn as nn
+
+# 1 个输入通道，16 个输出通道，3×3 卷积核
+conv = nn.Conv2d(
+    in_channels=1,     # 输入通道数（灰度图=1, RGB=3）
+    out_channels=16,   # 输出通道数（= 卷积核数量）
+    kernel_size=3,     # 卷积核大小
+    stride=1,          # 滑动步长
+    padding=1,         # 边缘填充（保持输出尺寸）
+)
+
+# 单张 28×28 灰度图
+x = torch.randn(1, 1, 28, 28)  # (batch, channel, height, width)
+out = conv(x)
+print(out.shape)  # (1, 16, 28, 28)
+```
+
+### 输出尺寸计算
+
+$$
+H_{out} = \frac{H_{in} + 2P - K}{S} + 1
+$$
+
+- $K$ 为 kernel_size，$P$ 为 padding，$S$ 为 stride
+
+## 池化层
+
+降低空间维度，增大感受野，减少计算量：
+
+```python
+# 最大池化（最常用）：取窗口内最大值
+maxpool = nn.MaxPool2d(kernel_size=2, stride=2)
+# 2×2 池化 → 尺寸减半
+
+# 平均池化：取窗口内平均值（用于全局平均池化）
+avgpool = nn.AdaptiveAvgPool2d((1, 1))  # 全局 → 1×1
+```
+
+## 完整 CNN 示例
+
+```python
+class SimpleCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            # Block 1: (C, H, W) → (32, 16, 16)
+            nn.Conv2d(3, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            # Block 2: (32, 16, 16) → (64, 8, 8)
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            # Block 3: (64, 8, 8) → (128, 4, 4)
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.classifier = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)),  # 全局平均池化
+            nn.Flatten(),
+            nn.Linear(128, num_classes),
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return x
+
+model = SimpleCNN(num_classes=10)
+x = torch.randn(4, 3, 32, 32)  # batch=4, RGB 32×32
+print(model(x).shape)  # (4, 10)
+```
+
+## 经典架构
+
+### LeNet-5（1998）
+
+```
+Conv → Pool → Conv → Pool → FC → FC → Softmax
+```
+手写数字识别的开山之作，结构简单。
+
+### AlexNet（2012）
+
+首次在 ImageNet 上使用 CNN + GPU 训练，ReLU + Dropout + 数据增强，开启深度学习时代。
+
+### VGG（2014）
+
+核心贡献：用堆叠的小卷积核（3×3 连续）替代大卷积核，深度增加但参数可控。
+
+```
+2 个 3×3 卷积的感受野 = 1 个 5×5 卷积，但参数更少、非线性更多
+```
+
+### ResNet（2015）
+
+**里程碑式的架构**。引入残差连接，让网络可以深达 152 层：
+
+```python
+class ResidualBlock(nn.Module):
+    def __init__(self, channels):
+        super().__init__()
+        self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)
+        self.bn1 = nn.BatchNorm2d(channels)
+        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)
+        self.bn2 = nn.BatchNorm2d(channels)
+
+    def forward(self, x):
+        residual = x  # 跳跃连接
+        out = torch.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out = torch.relu(out + residual)  # 加上输入
+        return out
+```
+
+残差连接的核心思想：网络学习残差 $F(x)$ 比直接学习 $H(x)$ 更容易。如果恒等映射是最优的，网络只需把 $F(x)$ 推到零。
+
+### 架构演进路线
+
+```
+LeNet → AlexNet → VGG → ResNet → DenseNet → EfficientNet
+```
+
+## 迁移学习
+
+绝大多数场景不需要从头训练 CNN，用预训练权重微调即可：
+
+```python
+from torchvision.models import resnet18
+
+# 加载在 ImageNet 上预训练的 ResNet
+model = resnet18(weights='IMAGENET1K_V1')
+
+# 冻结底层特征（只微调最后几层）
+for param in model.parameters():
+    param.requires_grad = False
+
+# 替换分类头
+model.fc = nn.Linear(512, num_classes)
+
+# 只训练分类头
+optimizer = torch.optim.Adam(model.fc.parameters(), lr=0.001)
+```
+
+## 数据增强
+
+增加训练数据的多样性，防止过拟合：
+
+```python
+from torchvision import transforms
+
+train_transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(p=0.5),    # 随机水平翻转
+    transforms.RandomRotation(15),              # 随机旋转 ±15°
+    transforms.ColorJitter(0.2, 0.2, 0.2),     # 颜色抖动
+    transforms.RandomResizedCrop(224),          # 随机裁剪
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225]),
+])
+```
+
+## 总结
+
+| 特性 | 说明 |
+|------|------|
+| 关键概念 | 卷积、池化、感受野、通道、残差连接 |
+| 最佳实践 | ResNet + 迁移学习 + 数据增强 |
+| 处理序列 | 一维卷积也可用于文本和时序（TCN） |

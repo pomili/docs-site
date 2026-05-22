@@ -1,0 +1,147 @@
+---
+sidebar_position: 9
+---
+
+# K-Means 聚类
+
+最简单、最常用的聚类算法，将数据划分为 K 个互不重叠的簇。
+
+## 核心思想
+
+目标：最小化簇内样本到质心的距离平方和（Inertia）：
+
+$$
+\text{Inertia} = \sum_{k=1}^{K} \sum_{x \in C_k} \|x - \mu_k\|^2
+$$
+
+其中 $\mu_k$ 是第 k 个簇的质心（均值向量）。
+
+## 算法流程
+
+1. 随机选择 K 个样本作为初始质心
+2. **分配**：每个样本归到距离最近的质心
+3. **更新**：重新计算每个簇的均值作为新质心
+4. 重复 2-3 直到质心不再变化（或达到最大迭代次数）
+
+```python
+import numpy as np
+
+class SimpleKMeans:
+    def __init__(self, n_clusters=3, max_iters=100):
+        self.n_clusters = n_clusters
+        self.max_iters = max_iters
+
+    def fit(self, X):
+        n_samples = len(X)
+
+        # 随机初始化质心
+        idx = np.random.choice(n_samples, self.n_clusters, replace=False)
+        self.centroids = X[idx].copy()
+
+        for _ in range(self.max_iters):
+            # 分配：计算每个样本到所有质心的距离
+            distances = np.array([
+                np.linalg.norm(X - c, axis=1) for c in self.centroids
+            ]).T  # shape: (n_samples, n_clusters)
+            labels = np.argmin(distances, axis=1)
+
+            # 更新：计算新质心
+            new_centroids = np.array([
+                X[labels == k].mean(axis=0) for k in range(self.n_clusters)
+            ])
+
+            # 收敛判断
+            if np.allclose(self.centroids, new_centroids):
+                break
+            self.centroids = new_centroids
+
+        self.labels_ = labels
+
+    def predict(self, X):
+        distances = np.array([
+            np.linalg.norm(X - c, axis=1) for c in self.centroids
+        ]).T
+        return np.argmin(distances, axis=1)
+```
+
+## Scikit-learn 实现
+
+```python
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+import matplotlib.pyplot as plt
+
+X, _ = make_blobs(n_samples=300, centers=4, n_features=2, random_state=42)
+
+model = KMeans(n_clusters=4, n_init=10, random_state=42)
+model.fit(X)
+
+print(f"质心位置:\n{model.cluster_centers_}")
+print(f"Inertia: {model.inertia_:.2f}")
+
+# 可视化
+plt.scatter(X[:, 0], X[:, 1], c=model.labels_, cmap='viridis', alpha=0.6)
+plt.scatter(
+    model.cluster_centers_[:, 0],
+    model.cluster_centers_[:, 1],
+    c='red', marker='x', s=200, linewidths=3, label='Centroids'
+)
+plt.legend()
+```
+
+## 如何选择 K 值
+
+### 肘部法则
+
+画出 Inertia 随 K 变化的曲线，找「拐点」：
+
+```python
+inertias = []
+K_range = range(1, 11)
+for k in K_range:
+    model = KMeans(n_clusters=k, n_init=10, random_state=42)
+    model.fit(X)
+    inertias.append(model.inertia_)
+
+plt.plot(K_range, inertias, 'bo-')
+plt.xlabel('K')
+plt.ylabel('Inertia')
+# 拐点处即为最佳 K
+```
+
+拐点之后 Inertia 下降速率显著变缓，选拐点处对应的 K。
+
+### 轮廓系数
+
+衡量簇内紧密程度与簇间分离程度：
+
+```python
+from sklearn.metrics import silhouette_score
+
+scores = []
+for k in range(2, 11):
+    model = KMeans(n_clusters=k, n_init=10, random_state=42)
+    labels = model.fit_predict(X)
+    scores.append(silhouette_score(X, labels))
+
+best_k = range(2, 11)[np.argmax(scores)]
+print(f"最佳 K = {best_k}")
+```
+
+## 局限性
+
+| 问题 | 说明 | 应对 |
+|------|------|------|
+| 需要预设 K | 不知道分几类 | 肘部法则/轮廓系数 |
+| 对初始质心敏感 | 不同初始化结果可能不同 | `n_init` 多次运行取最优 |
+| 假设球形簇 | 无法处理细长或环状簇 | 用 DBSCAN 替代 |
+| 对异常值敏感 | 异常值会拉偏质心 | 预处理去异常值 |
+| 对尺度敏感 | 数值大的特征主导距离 | **必须先标准化** |
+
+## 总结
+
+| 特性 | 说明 |
+|------|------|
+| 优点 | 简单快速、可扩展到大样本、结果可解释 |
+| 缺点 | 需预设 K、假设球形簇、对初始化和异常值敏感 |
+| 适用场景 | 客户分群、图像压缩（颜色量化）、探索性数据分析 |

@@ -1,0 +1,170 @@
+---
+sidebar_position: 2
+---
+
+# 数学基础回顾
+
+机器学习核心数学知识的简明回顾，聚焦于理解算法原理所需的关键概念。
+
+## 线性代数
+
+### 向量与矩阵
+
+向量是机器学习中最基本的数据结构。一个样本的所有特征通常表示为一个特征向量。
+
+```python
+import numpy as np
+
+# 向量：1 维数组（形状 (n,) 为向量，(1,n) 或 (n,1) 为矩阵）
+v = np.array([1.0, 2.0, 3.0])  # shape: (3,)
+
+# 矩阵：2 维数组
+A = np.array([[1, 2],
+              [3, 4],
+              [5, 6]])  # shape: (3, 2)
+
+# 张量：多维数组（如图像 shape: (batch, height, width, channels)）
+```
+
+### 矩阵运算
+
+```python
+# 点积（内积）— 衡量两个向量的相似度
+v1 = np.array([1, 2, 3])
+v2 = np.array([4, 5, 6])
+dot = np.dot(v1, v2)  # 1*4 + 2*5 + 3*6 = 32
+
+# 矩阵乘法 — 神经网络每一层的核心运算
+W = np.array([[0.5, -0.2], [0.1, 0.8]])  # 权重矩阵
+x = np.array([1.0, 2.0])                  # 输入向量
+h = W @ x  # np.array([0.1, 1.7])
+
+# 转置
+A_T = A.T  # (2, 3)
+```
+
+### 特征值与特征向量
+
+对于方阵 $A$，若 $Av = \lambda v$，则 $\lambda$ 为特征值，$v$ 为特征向量。
+
+- **PCA 的核心**：协方差矩阵的特征向量即为数据的主成分方向
+- 特征值越大，对应方向上的方差越大（包含的信息越多）
+
+## 概率论
+
+### 核心概念
+
+**贝叶斯定理**是朴素贝叶斯分类器的基础：
+
+$$
+P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}
+$$
+
+- $P(A|B)$ — 后验概率：看到数据 B 后，对 A 的信念
+- $P(A)$ — 先验概率：看到数据前，对 A 的信念
+- $P(B|A)$ — 似然：在 A 成立时观测到 B 的概率
+
+### 常见分布
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 高斯分布（正态分布）— 自然界最常见的分布
+mu, sigma = 0, 1
+x = np.random.randn(10000) * sigma + mu  # 标准正态采样
+
+# 伯努利分布 — 二分类问题的输出分布
+p = 0.7
+samples = np.random.binomial(n=1, p=p, size=1000)
+
+# 多项分布 — 多分类问题的输出分布
+probs = [0.1, 0.3, 0.6]
+samples = np.random.multinomial(n=1, pvals=probs, size=1000)
+```
+
+### 最大似然估计（MLE）
+
+给定观测数据，寻找最可能产生这些数据的参数：
+
+```python
+# 线性回归中的 MLE：最小化均方误差
+# y = w·x + b + ε，其中 ε ~ N(0, σ²)
+# 最大化似然 ⇔ 最小化 Σ(y_i - ŷ_i)²
+```
+
+## 微积分
+
+### 梯度与方向导数
+
+梯度指向函数增长最快的方向。梯度下降沿着负梯度方向移动：
+
+$$
+\theta_{t+1} = \theta_t - \eta \nabla J(\theta_t)
+$$
+
+```python
+# 一维梯度下降示例：最小化 f(x) = x²
+def gradient_descent_1d(lr=0.1, steps=10):
+    x = 5.0  # 起始点
+    for i in range(steps):
+        grad = 2 * x           # f'(x) = 2x
+        x = x - lr * grad
+        print(f"step {i}: x = {x:.3f}, f(x) = {x**2:.3f}")
+    return x
+
+gradient_descent_1d()
+```
+
+输出：
+
+```
+step 0: x = 4.000, f(x) = 16.000
+step 1: x = 3.200, f(x) = 10.240
+step 2: x = 2.560, f(x) = 6.554
+...
+step 9: x = 0.537, f(x) = 0.289
+```
+
+### 链式法则
+
+反向传播的数学基础：
+
+$$
+\frac{\partial L}{\partial w_1} = \frac{\partial L}{\partial y} \cdot \frac{\partial y}{\partial h} \cdot \frac{\partial h}{\partial w_1}
+$$
+
+```python
+# 手动实现反向传播（标量版本）
+# 前向：y = w2 * sigmoid(w1 * x)  — 损失 L = (y - y_true)²
+# 反向：dL/dw2 = dL/dy * dy/dw2
+#       dL/dw1 = dL/dy * dy/dh * dh/dw1
+```
+
+### 常用求导公式
+
+| 函数 | 导数 | ML 中常见用途 |
+|------|------|-------------|
+| $x^n$ | $nx^{n-1}$ | 多项式特征 |
+| $\ln x$ | $1/x$ | 交叉熵损失 |
+| $e^x$ | $e^x$ | Softmax 分母 |
+| $\sigma(x) = \frac{1}{1+e^{-x}}$ | $\sigma(x)(1-\sigma(x))$ | 逻辑回归、门控 |
+| $\tanh(x)$ | $1 - \tanh^2(x)$ | RNN 激活 |
+| $\max(0, x)$ | $0$ 或 $1$ | ReLU 激活 |
+
+## 优化基础
+
+### 凸函数
+
+凸函数的一个关键性质：局部最小值即全局最小值。这保证了优化算法能找到全局最优解。
+
+- 线性回归的 MSE 损失：**凸函数** → 有闭式解
+- 神经网络损失：**非凸** → 可能陷入局部最优
+
+### 拉格朗日乘数法
+
+SVM 的理论基础：在有约束条件下求极值。通过引入拉格朗日乘子，将约束优化转化为无约束优化。
+
+---
+
+回头看这些数学时，**重点理解几何直觉**而非死记公式。3Blue1Brown 的视频系列是极好的辅助材料。

@@ -1,0 +1,145 @@
+---
+sidebar_position: 10
+---
+
+# DBSCAN
+
+DBSCAN（Density-Based Spatial Clustering of Applications with Noise）是一种基于密度的聚类算法，不需要预设簇的数量，能发现任意形状的簇并自动识别噪声。
+
+## 核心思想
+
+簇 = 被低密度区域分开的高密度区域。两个关键参数：
+
+- **$\epsilon$（eps）**：邻域半径
+- **minPts**：形成高密度区域所需的最小点数
+
+### 三种点的角色
+
+- **核心点**：半径 $\epsilon$ 内至少有 minPts 个邻居
+- **边界点**：在核心点的邻域内，但自身邻居不足 minPts
+- **噪声点**：既不是核心点也不是边界点
+
+```
+核心点 → 扩展簇
+边界点 → 加入已有簇
+噪声点 → 直接丢弃（标记为 -1）
+```
+
+## 算法流程
+
+```python
+import numpy as np
+from sklearn.neighbors import NearestNeighbors
+
+class SimpleDBSCAN:
+    def __init__(self, eps=0.5, min_samples=5):
+        self.eps = eps
+        self.min_samples = min_samples
+
+    def fit(self, X):
+        n = len(X)
+        # 计算每个点的邻居
+        nn = NearestNeighbors(radius=self.eps)
+        nn.fit(X)
+        neighbors = nn.radius_neighbors(X, return_distance=False)
+
+        # 标记核心点
+        is_core = np.array([len(nbr) >= self.min_samples for nbr in neighbors])
+        labels = np.full(n, -1, dtype=int)  # -1 表示噪声
+
+        cluster_id = 0
+        for i in range(n):
+            if labels[i] != -1 or not is_core[i]:
+                continue
+            # BFS 扩展簇
+            labels[i] = cluster_id
+            queue = list(neighbors[i])
+            while queue:
+                q = queue.pop()
+                if labels[q] == -1:
+                    labels[q] = cluster_id
+                    if is_core[q]:
+                        queue.extend(neighbors[q])
+            cluster_id += 1
+
+        self.labels_ = labels
+        return self
+```
+
+## Scikit-learn 实现
+
+```python
+from sklearn.cluster import DBSCAN
+from sklearn.datasets import make_moons
+from sklearn.preprocessing import StandardScaler
+
+# DBSCAN 能处理 K-Means 无法处理的月牙形数据
+X, _ = make_moons(n_samples=300, noise=0.08, random_state=42)
+X = StandardScaler().fit_transform(X)
+
+model = DBSCAN(eps=0.3, min_samples=5)
+labels = model.fit_predict(X)
+
+# 统计
+n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+n_noise = (labels == -1).sum()
+print(f"簇的数量: {n_clusters}")
+print(f"噪声点数量: {n_noise}")
+```
+
+## 如何选择参数
+
+### 选择 eps
+
+用 k-距离图（k-distance graph）：对每个点计算到第 k 个最近邻的距离，排序后找拐点：
+
+```python
+from sklearn.neighbors import NearestNeighbors
+
+min_samples = 5  # 先定 minPts
+nn = NearestNeighbors(n_neighbors=min_samples)
+nn.fit(X)
+distances, _ = nn.kneighbors(X)
+
+# 取第 k 个距离，排序
+k_dist = np.sort(distances[:, -1])
+
+plt.plot(k_dist)
+plt.axhline(y=0.3, color='r', linestyle='--')  # 拐点处
+plt.xlabel('Points sorted by distance')
+plt.ylabel(f'{min_samples}-th nearest distance')
+```
+
+拐点对应的距离即为合适的 `eps`。
+
+### 选择 minPts
+
+经验法则：`minPts >= 维度 + 1`（一般取 2x 维度）。
+
+- 太小 → 噪声点容易被当成簇
+- 太大 → 小簇会被合并或当作噪声
+
+## DBSCAN vs K-Means
+
+| 维度 | K-Means | DBSCAN |
+|------|---------|--------|
+| 簇形状 | 只能球形 | 任意形状 |
+| K 值 | 需要预设 | 自动发现 |
+| 噪声处理 | 所有点都分配到簇 | 自动识别噪声 |
+| 参数 | K | eps + minPts |
+| 大数据 | 快 | 较慢 |
+| 密度不均 | 受影响小 | ℹ️ 受影响大 |
+
+## 局限性
+
+- 密度差异大的数据集表现差（一个 eps 难以兼顾）
+- 高维数据效果不好（维度灾难，距离区分度下降）
+- 参数敏感，eps 稍微改变结果可能完全不同
+
+## 总结
+
+| 特性 | 说明 |
+|------|------|
+| 优点 | 不需要预设 K、能发现任意形状、天然抗噪声 |
+| 缺点 | 参数敏感、数据密度不均时不好用、不适合高维 |
+| 适用场景 | 地理空间数据、异常检测、有噪声的真实数据 |

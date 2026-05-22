@@ -1,0 +1,130 @@
+---
+sidebar_position: 8
+---
+
+# XGBoost & LightGBM
+
+梯度提升树（Gradient Boosting Decision Tree, GBDT）是表格数据上的王者，XGBoost 和 LightGBM 是其中最优秀的两个实现。
+
+## 核心思想
+
+不同于随机森林的 Bagging（并行训练多棵树），Boosting 是**串行**的：每棵新树专注纠正前一棵树的误差。
+
+$$
+\hat{y}^{(t)} = \hat{y}^{(t-1)} + \eta \cdot f_t(x)
+$$
+
+- $\hat{y}^{(t-1)}$ — 前 t-1 棵树的预测之和
+- $f_t(x)$ — 第 t 棵新树，拟合前一步的**残差**（梯度方向）
+- $\eta$ — 学习率，控制每棵树的贡献
+
+## Boosting 的三个创新点
+
+| 技术 | 作用 |
+|------|------|
+| 梯度提升 | 用梯度方向引导下一棵树拟合残差 |
+| 正则化 | 对叶节点权重做 L1/L2 惩罚，防止过拟合 |
+| 列采样 | 类似随机森林，每次分裂只考虑部分特征 |
+
+## XGBoost
+
+### 关键优化
+
+- **二阶泰勒展开** — 更精确地近似损失函数（LightGBM 也用了）
+- **预排序 + 分位点近似** — 加速寻找最佳分裂点
+- **稀疏感知** — 自动处理缺失值
+- **Shrinkage（学习率）** — 每棵树乘以一个小系数，需要更多树但泛化更好
+
+### 代码实现
+
+```python
+import xgboost as xgb
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+X, y = make_classification(n_samples=5000, n_features=20, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+model = xgb.XGBClassifier(
+    n_estimators=200,       # 树的数量
+    learning_rate=0.05,     # 学习率（小学习率 + 多棵树 = 好效果）
+    max_depth=6,            # 树深度
+    subsample=0.8,          # 行采样比例
+    colsample_bytree=0.8,   # 列采样比例
+    reg_alpha=0.1,          # L1 正则
+    reg_lambda=1.0,         # L2 正则
+    early_stopping_rounds=20,
+    eval_metric='logloss',
+)
+model.fit(
+    X_train, y_train,
+    eval_set=[(X_test, y_test)],
+    verbose=False,
+)
+
+y_pred = model.predict(X_test)
+print(f"准确率: {accuracy_score(y_test, y_pred):.3f}")
+```
+
+## LightGBM
+
+### 关键优化
+
+- **直方图算法** — 将连续特征离散化到 bins，大幅减少计算量
+- **Leaf-wise 生长** — 选择分裂增益最大的叶节点（而非层序），收敛更快
+- **Gradient-based One-Side Sampling (GOSS)** — 保留大梯度样本，采样小梯度样本
+- **Exclusive Feature Bundling (EFB)** — 合并互斥特征，减少维度
+
+### 代码实现
+
+```python
+import lightgbm as lgb
+
+model = lgb.LGBMClassifier(
+    n_estimators=200,
+    learning_rate=0.05,
+    max_depth=6,
+    num_leaves=31,          # 最大叶节点数（不同于 max_depth）
+    subsample=0.8,
+    colsample_bytree=0.8,
+    reg_alpha=0.1,
+    reg_lambda=1.0,
+    verbosity=-1,
+)
+model.fit(
+    X_train, y_train,
+    eval_set=[(X_test, y_test)],
+    callbacks=[lgb.early_stopping(20), lgb.log_evaluation(0)],
+)
+
+y_pred = model.predict(X_test)
+print(f"准确率: {accuracy_score(y_test, y_pred):.3f}")
+```
+
+## XGBoost vs LightGBM
+
+| 维度 | XGBoost | LightGBM |
+|------|---------|----------|
+| 分裂策略 | Level-wise（按层） | Leaf-wise（选增益最大） |
+| 特征处理 | 预排序 | 直方图（更快、内存更少） |
+| 训练速度 | 较慢 | 快 3-10 倍 |
+| 小数据集 | 表现稳定 | 可能过拟合 |
+| 大数据集 | 内存占用大 | **明显更快，内存更省** |
+| 生态 | 更成熟，文档多 | 文档在改善 |
+
+## 调参建议
+
+1. **先定 `learning_rate`** — 和 `n_estimators` 联动，小学习率（0.01-0.1）+ 更多树
+2. **再调 `max_depth` / `num_leaves`** — LightGBM 的 `num_leaves` 设 2^depth 左右
+3. **加正则** — `reg_alpha`（L1）、`reg_lambda`（L2）防止过拟合
+4. **行/列采样** — `subsample` 和 `colsample_bytree` 设 0.7-0.9
+5. **Early Stopping** — 验证集上连续 N 轮不提升就停止训练
+
+## 总结
+
+| 特性 | 说明 |
+|------|------|
+| 优点 | Kaggle 竞赛神器、自动处理缺失值、鲁棒性强、特征重要性 |
+| 缺点 | 过拟合风险（需调参）、不可解释（模型本身是黑箱）、串行训练慢于 RF |
+| 适用场景 | 表格数据分类/回归首选、特征交互复杂的结构化数据 |
