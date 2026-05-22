@@ -1,0 +1,438 @@
+---
+sidebar_position: 1
+---
+
+# CMake 构建 STM32 程序
+
+## 工具链
+
+确保以下工具已安装并可用：
+
+```bash
+arm-none-eabi-gcc --version
+arm-none-eabi-gdb --version
+cmake --version
+ninja --version
+openocd --version
+```
+
+## 流程
+
+### 一、使用 CubeMX 生成 CMake 项目
+
+#### 项目文件结构
+
+```
+MyProject/                  // 项目根目录
+├── CMakeLists.txt           // CMake 工程主配置文件
+│                            // 定义项目名称、语言、交叉编译器、源文件、头文件路径等
+├── cmake/                   // 额外的 CMake 脚本
+├── Core/                    // 用户应用代码
+│   ├── Inc/                 // 头文件 (.h)
+│   └── Src/                 // 源文件 (.c)
+├── Drivers/                 // 芯片厂商驱动
+├── startup_stm32xxxx.s      // 启动文件（汇编）
+│                            // 定义中断向量表、复位入口、初始化栈指针
+│                            // 调用系统初始化函数，最终跳转到 main()
+├── STM32xxxx_FLASH.ld       // 链接脚本
+│                            // 定义 Flash/RAM 起始地址、代码/变量布局、堆栈大小
+└── ...
+```
+
+### 二、CMake 编译生成 .elf
+
+```bash
+cd MyProject
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+```
+
+- `-B build` — 指定构建目录为 `build`
+- `-G Ninja` — 使用 Ninja 作为构建工具（Ninja 轻量、快速，类似 Make；省略则默认使用 Makefile）
+- `-DCMAKE_BUILD_TYPE=Debug` — 设置构建类型，顶层 `CMakeLists.txt` 中默认值为 `Debug`
+
+可选构建类型：
+
+| 类型 | 说明 |
+|------|------|
+| `Debug` | 默认，包含调试信息 |
+| `Release` | 优化高，通常无调试信息 |
+| `RelWithDebInfo` | 优化高，同时保留调试信息 |
+| `MinSizeRel` | 优先减小程序体积 |
+
+#### 生成 .hex 和 .bin 固件
+
+默认只生成 `.elf`，如需 `.hex` 和 `.bin`，在 `CMakeLists.txt` 中添加：
+
+```cmake
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+  COMMAND arm-none-eabi-objcopy -O ihex $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.hex
+  COMMAND arm-none-eabi-objcopy -O binary $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.bin
+)
+```
+
+### 三、OpenOCD 下载固件
+
+#### 1. 选择配置文件
+
+一般需要两个配置文件：
+
+```bash
+# 调试器接口
+interface/stlink.cfg
+
+# 目标芯片
+target/stm32f1x.cfg
+```
+
+启动 OpenOCD：
+
+```bash
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg
+```
+
+#### 2. 下载 ELF
+
+```bash
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg \
+  -c "program build/MyProject.elf verify reset exit"
+```
+
+#### 3. 下载 BIN
+
+烧录 `.bin` 需要指定 FLASH 起始地址，STM32 通常是 `0x08000000`：
+
+```bash
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg \
+  -c "program re_study_64k.bin 0x08000000 verify reset exit"
+```
+
+### 四、GDB 调试
+
+#### 1. 启动 OpenOCD
+
+```bash
+openocd -f interface/stlink.cfg -f target/stm32f1x.cfg
+```
+
+> 如果使用 DAPLink，调试器配置文件改为 `interface/cmsis-dap.cfg`
+
+#### 2. 启动 GDB
+
+```bash
+arm-none-eabi-gdb build/MyProject.elf
+```
+
+#### 常用 GDB 命令
+
+```bash
+target remote localhost:3333     # 连接到 OpenOCD
+monitor reset halt               # 复位并暂停
+monitor reset run                # 复位并运行
+load                             # 下载程序到芯片
+
+# 断点
+break main                       # 在 main 处设置断点
+info breakpoints                 # 查看所有断点（简写 i b）
+delete 1                         # 删除 1 号断点
+delete                           # 删除所有断点
+
+# 执行
+continue                         # 继续运行（简写 c）
+next                             # 单步，不进入函数（简写 n）
+step                             # 单步，进入函数（简写 s）
+
+# 查看
+print 变量名                     # 查看变量（简写 p counter）
+info registers                   # 查看寄存器（简写 i r）
+backtrace                        # 查看调用栈（简写 bt）
+
+# 内存查看
+x/16xw 0x08000000               # 查看 Flash 起始位置（16 个 32-bit word，hex）
+x/16xw 0x20000000               # 查看 RAM 起始位置
+
+# 查看数组
+p &buffer                        # 先看地址
+x/16xw &buffer                   # 再查看内容
+
+# 反汇编
+x/10i $pc                        # 从 PC 位置反汇编 10 条指令
+
+quit                             # 退出
+```
+
+### 五、脚本化
+
+#### OpenOCD 配置脚本
+
+在项目根目录创建 `openocd.cfg`：
+
+```bash
+source [find interface/stlink.cfg]
+transport select swd
+adapter speed 1000
+source [find target/stm32f1x.cfg]
+```
+
+启动 OpenOCD 简化为：
+
+```bash
+openocd -f openocd.cfg
+```
+
+下载程序：
+
+```bash
+openocd -f openocd.cfg -c "program build/MyProject.elf verify reset exit"
+```
+
+#### GDB 脚本
+
+创建 `debug.gdb`：
+
+```bash
+target remote localhost:3333
+monitor reset halt
+load
+break main
+continue
+```
+
+启动调试：
+
+```bash
+arm-none-eabi-gdb build/MyProject.elf -x debug.gdb
+```
+
+#### 项目配置文件 `project.env`
+
+```bash
+OPENOCD_INTERFACE=interface/cmsis-dap.cfg
+OPENOCD_TARGET=target/stm32f1x.cfg
+OPENOCD_SPEED=1000
+BUILD_DIR=build
+BUILD_TYPE=Debug
+```
+
+#### Linux/Mac — flash.sh
+
+```bash
+#!/usr/bin/env bash
+set -e
+
+if [ -f project.env ]; then
+    source project.env
+fi
+
+BUILD_DIR="${BUILD_DIR:-build}"
+GENERATOR="${GENERATOR:-Ninja}"
+BUILD_TYPE="${BUILD_TYPE:-Debug}"
+
+OPENOCD_INTERFACE="${OPENOCD_INTERFACE:-interface/cmsis-dap.cfg}"
+OPENOCD_TARGET="${OPENOCD_TARGET:-target/stm32f4x.cfg}"
+OPENOCD_SPEED="${OPENOCD_SPEED:-4000}"
+
+cmake -B "$BUILD_DIR" -G "$GENERATOR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+cmake --build "$BUILD_DIR"
+
+ELF_FILE=$(find "$BUILD_DIR" -maxdepth 3 -name "*.elf" | head -n 1)
+
+if [ -z "$ELF_FILE" ]; then
+    echo "Error: no .elf file found"
+    exit 1
+fi
+
+echo "ELF: $ELF_FILE"
+
+openocd \
+    -f "$OPENOCD_INTERFACE" \
+    -c "transport select swd" \
+    -c "adapter speed $OPENOCD_SPEED" \
+    -f "$OPENOCD_TARGET" \
+    -c "program $ELF_FILE verify reset exit"
+```
+
+#### Linux/Mac — debug.sh
+
+```bash
+#!/usr/bin/env bash
+set -e
+
+if [ -f project.env ]; then
+    source project.env
+fi
+
+BUILD_DIR="${BUILD_DIR:-build}"
+GENERATOR="${GENERATOR:-Ninja}"
+BUILD_TYPE="${BUILD_TYPE:-Debug}"
+
+OPENOCD_INTERFACE="${OPENOCD_INTERFACE:-interface/cmsis-dap.cfg}"
+OPENOCD_TARGET="${OPENOCD_TARGET:-target/stm32f4x.cfg}"
+OPENOCD_SPEED="${OPENOCD_SPEED:-4000}"
+
+GDB="${GDB:-arm-none-eabi-gdb}"
+
+cmake -B "$BUILD_DIR" -G "$GENERATOR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+cmake --build "$BUILD_DIR"
+
+ELF_FILE=$(find "$BUILD_DIR" -maxdepth 3 -name "*.elf" | head -n 1)
+
+if [ -z "$ELF_FILE" ]; then
+    echo "Error: no .elf file found"
+    exit 1
+fi
+
+echo "ELF: $ELF_FILE"
+
+openocd \
+    -f "$OPENOCD_INTERFACE" \
+    -c "transport select swd" \
+    -c "adapter speed $OPENOCD_SPEED" \
+    -f "$OPENOCD_TARGET" &
+
+OPENOCD_PID=$!
+
+cleanup() {
+    kill "$OPENOCD_PID" 2>/dev/null || true
+}
+
+trap cleanup EXIT
+
+sleep 1
+
+"$GDB" "$ELF_FILE" \
+    -ex "target remote localhost:3333" \
+    -ex "monitor reset halt" \
+    -ex "load" \
+    -ex "break main" \
+    -ex "continue"
+```
+
+#### Windows — project.ps1
+
+```powershell
+$OPENOCD_INTERFACE = "interface/cmsis-dap.cfg"
+$OPENOCD_TARGET    = "target/stm32f1x.cfg"
+$OPENOCD_SPEED     = "1000"
+
+$BUILD_DIR  = "build"
+$BUILD_TYPE = "Debug"
+$GENERATOR  = "Ninja"
+
+$GDB = "arm-none-eabi-gdb"
+```
+
+#### Windows — flash.ps1
+
+```powershell
+$ErrorActionPreference = "Stop"
+
+if (Test-Path ".\project.ps1") {
+    . .\project.ps1
+}
+
+if (-not $BUILD_DIR) { $BUILD_DIR = "build" }
+if (-not $BUILD_TYPE) { $BUILD_TYPE = "Debug" }
+if (-not $GENERATOR) { $GENERATOR = "Ninja" }
+
+if (-not $OPENOCD_INTERFACE) { $OPENOCD_INTERFACE = "interface/cmsis-dap.cfg" }
+if (-not $OPENOCD_TARGET) { $OPENOCD_TARGET = "target/stm32f4x.cfg" }
+if (-not $OPENOCD_SPEED) { $OPENOCD_SPEED = "4000" }
+
+Write-Host "==> Configure CMake"
+cmake -B $BUILD_DIR -G $GENERATOR -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+
+Write-Host "==> Build"
+cmake --build $BUILD_DIR
+
+Write-Host "==> Find ELF"
+$ELF_FILE = Get-ChildItem -Path $BUILD_DIR -Recurse -Filter "*.elf" | Select-Object -First 1
+
+if (-not $ELF_FILE) {
+    Write-Error "No .elf file found in $BUILD_DIR"
+    exit 1
+}
+
+$ELF_PATH = $ELF_FILE.FullName
+
+Write-Host "==> ELF: $ELF_PATH"
+
+Write-Host "==> Flash with OpenOCD"
+openocd `
+    -f $OPENOCD_INTERFACE `
+    -c "transport select swd" `
+    -c "adapter speed $OPENOCD_SPEED" `
+    -f $OPENOCD_TARGET `
+    -c "program `"$ELF_PATH`" verify reset exit"
+```
+
+#### Windows — debug.ps1
+
+```powershell
+$ErrorActionPreference = "Stop"
+
+if (Test-Path ".\project.ps1") {
+    . .\project.ps1
+}
+
+if (-not $BUILD_DIR) { $BUILD_DIR = "build" }
+if (-not $BUILD_TYPE) { $BUILD_TYPE = "Debug" }
+if (-not $GENERATOR) { $GENERATOR = "Ninja" }
+
+if (-not $OPENOCD_INTERFACE) { $OPENOCD_INTERFACE = "interface/cmsis-dap.cfg" }
+if (-not $OPENOCD_TARGET) { $OPENOCD_TARGET = "target/stm32f4x.cfg" }
+if (-not $OPENOCD_SPEED) { $OPENOCD_SPEED = "4000" }
+if (-not $GDB) { $GDB = "arm-none-eabi-gdb" }
+
+Write-Host "==> Configure CMake"
+cmake -B $BUILD_DIR -G $GENERATOR -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+
+Write-Host "==> Build"
+cmake --build $BUILD_DIR
+
+Write-Host "==> Find ELF"
+$ELF_FILE = Get-ChildItem -Path $BUILD_DIR -Recurse -Filter "*.elf" | Select-Object -First 1
+
+if (-not $ELF_FILE) {
+    Write-Error "No .elf file found in $BUILD_DIR"
+    exit 1
+}
+
+$ELF_PATH = $ELF_FILE.FullName
+
+Write-Host "==> ELF: $ELF_PATH"
+
+Write-Host "==> Start OpenOCD"
+
+$OPENOCD_ARGS = @(
+    "-f", $OPENOCD_INTERFACE,
+    "-c", "transport select swd",
+    "-c", "adapter speed $OPENOCD_SPEED",
+    "-f", $OPENOCD_TARGET
+)
+
+$OPENOCD_PROCESS = Start-Process `
+    -FilePath "openocd" `
+    -ArgumentList $OPENOCD_ARGS `
+    -PassThru `
+    -NoNewWindow
+
+Start-Sleep -Seconds 2
+
+try {
+    Write-Host "==> Start GDB"
+
+    & $GDB $ELF_PATH `
+        -ex "target remote localhost:3333" `
+        -ex "monitor reset halt" `
+        -ex "load" `
+        -ex "break main" `
+        -ex "continue"
+}
+finally {
+    Write-Host "==> Stop OpenOCD"
+    if ($OPENOCD_PROCESS -and -not $OPENOCD_PROCESS.HasExited) {
+        Stop-Process -Id $OPENOCD_PROCESS.Id -Force
+    }
+}
+```
