@@ -9,40 +9,6 @@
         <generator>https://github.com/jpmonette/feed</generator>
         <language>zh-Hans</language>
         <item>
-            <title><![CDATA[使用 Docusaurus 搭建个人文档站点]]></title>
-            <link>https://pomili.github.io/blog/hello-docusaurus</link>
-            <guid>https://pomili.github.io/blog/hello-docusaurus</guid>
-            <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
-            <description><![CDATA[从零开始，用 Docusaurus 搭建了一个个人文档站点。]]></description>
-            <content:encoded><![CDATA[<p>从零开始，用 Docusaurus 搭建了一个个人文档站点。</p>
-<!-- -->
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="为什么选-docusaurus">为什么选 Docusaurus<a href="https://pomili.github.io/blog/hello-docusaurus#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-docusaurus" class="hash-link" aria-label="为什么选 Docusaurus的直接链接" title="为什么选 Docusaurus的直接链接" translate="no">​</a></h2>
-<p>Docusaurus 是 Meta 开源的静态站点生成器，基于 React 构建，专为技术文档设计：</p>
-<ul>
-<li class=""><strong>MDX 支持</strong> — Markdown + JSX，文档里可以嵌入 React 组件</li>
-<li class=""><strong>开箱即用</strong> — 搜索、版本管理、i18n、暗色模式全部内置</li>
-<li class=""><strong>React 生态</strong> — 可以自由扩展自定义组件</li>
-<li class=""><strong>静态构建</strong> — 纯静态产物，部署到任何托管平台</li>
-</ul>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="搭建过程">搭建过程<a href="https://pomili.github.io/blog/hello-docusaurus#%E6%90%AD%E5%BB%BA%E8%BF%87%E7%A8%8B" class="hash-link" aria-label="搭建过程的直接链接" title="搭建过程的直接链接" translate="no">​</a></h2>
-<p>几行命令就完成了初始化：</p>
-<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">npx create-docusaurus@latest docs-site classic --typescript</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">cd docs-site</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">npm start</span><br></div></code></pre></div></div>
-<p>本地开发服务器跑在 <code>http://localhost:3000/</code>，修改文档实时热更新。</p>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="配置要点">配置要点<a href="https://pomili.github.io/blog/hello-docusaurus#%E9%85%8D%E7%BD%AE%E8%A6%81%E7%82%B9" class="hash-link" aria-label="配置要点的直接链接" title="配置要点的直接链接" translate="no">​</a></h2>
-<p>核心配置文件是 <code>docusaurus.config.ts</code>，几个关键点：</p>
-<ol>
-<li class=""><strong>baseUrl</strong> — 本地用 <code>/</code>，部署到 GitHub Pages 需要改为仓库名，如 <code>/docs-site/</code></li>
-<li class=""><strong>i18n</strong> — 中文站点设置 <code>defaultLocale: 'zh-Hans'</code></li>
-<li class=""><strong>主题定制</strong> — 通过 <code>custom.css</code> 覆盖 Infima 变量，实现自定义配色</li>
-</ol>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="部署">部署<a href="https://pomili.github.io/blog/hello-docusaurus#%E9%83%A8%E7%BD%B2" class="hash-link" aria-label="部署的直接链接" title="部署的直接链接" translate="no">​</a></h2>
-<p>使用 GitHub Actions 自动部署到 GitHub Pages，推送即发布，无需手动操作。</p>
-<hr>
-<p>这只是开始。后面会陆续补充更多内容，记录学习与开发的过程。</p>]]></content:encoded>
-            <category>Docusaurus</category>
-            <category>前端</category>
-        </item>
-        <item>
             <title><![CDATA[机器学习学习路线：从入门到实践]]></title>
             <link>https://pomili.github.io/blog/ml-roadmap</link>
             <guid>https://pomili.github.io/blog/ml-roadmap</guid>
@@ -190,6 +156,40 @@
 <p>学习路线不是线性的，不同阶段之间会有交叉和往复。关键是保持持续学习的节奏，每天进步一点。</p>]]></content:encoded>
             <category>机器学习</category>
             <category>AI</category>
+        </item>
+        <item>
+            <title><![CDATA[使用 Docusaurus 搭建个人文档站点]]></title>
+            <link>https://pomili.github.io/blog/hello-docusaurus</link>
+            <guid>https://pomili.github.io/blog/hello-docusaurus</guid>
+            <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
+            <description><![CDATA[从零开始，用 Docusaurus 搭建了一个个人文档站点。]]></description>
+            <content:encoded><![CDATA[<p>从零开始，用 Docusaurus 搭建了一个个人文档站点。</p>
+<!-- -->
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="为什么选-docusaurus">为什么选 Docusaurus<a href="https://pomili.github.io/blog/hello-docusaurus#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-docusaurus" class="hash-link" aria-label="为什么选 Docusaurus的直接链接" title="为什么选 Docusaurus的直接链接" translate="no">​</a></h2>
+<p>Docusaurus 是 Meta 开源的静态站点生成器，基于 React 构建，专为技术文档设计：</p>
+<ul>
+<li class=""><strong>MDX 支持</strong> — Markdown + JSX，文档里可以嵌入 React 组件</li>
+<li class=""><strong>开箱即用</strong> — 搜索、版本管理、i18n、暗色模式全部内置</li>
+<li class=""><strong>React 生态</strong> — 可以自由扩展自定义组件</li>
+<li class=""><strong>静态构建</strong> — 纯静态产物，部署到任何托管平台</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="搭建过程">搭建过程<a href="https://pomili.github.io/blog/hello-docusaurus#%E6%90%AD%E5%BB%BA%E8%BF%87%E7%A8%8B" class="hash-link" aria-label="搭建过程的直接链接" title="搭建过程的直接链接" translate="no">​</a></h2>
+<p>几行命令就完成了初始化：</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#393A34"><span class="token plain">npx create-docusaurus@latest docs-site classic --typescript</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">cd docs-site</span><br></div><div class="token-line" style="color:#393A34"><span class="token plain">npm start</span><br></div></code></pre></div></div>
+<p>本地开发服务器跑在 <code>http://localhost:3000/</code>，修改文档实时热更新。</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="配置要点">配置要点<a href="https://pomili.github.io/blog/hello-docusaurus#%E9%85%8D%E7%BD%AE%E8%A6%81%E7%82%B9" class="hash-link" aria-label="配置要点的直接链接" title="配置要点的直接链接" translate="no">​</a></h2>
+<p>核心配置文件是 <code>docusaurus.config.ts</code>，几个关键点：</p>
+<ol>
+<li class=""><strong>baseUrl</strong> — 本地用 <code>/</code>，部署到 GitHub Pages 需要改为仓库名，如 <code>/docs-site/</code></li>
+<li class=""><strong>i18n</strong> — 中文站点设置 <code>defaultLocale: 'zh-Hans'</code></li>
+<li class=""><strong>主题定制</strong> — 通过 <code>custom.css</code> 覆盖 Infima 变量，实现自定义配色</li>
+</ol>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="部署">部署<a href="https://pomili.github.io/blog/hello-docusaurus#%E9%83%A8%E7%BD%B2" class="hash-link" aria-label="部署的直接链接" title="部署的直接链接" translate="no">​</a></h2>
+<p>使用 GitHub Actions 自动部署到 GitHub Pages，推送即发布，无需手动操作。</p>
+<hr>
+<p>这只是开始。后面会陆续补充更多内容，记录学习与开发的过程。</p>]]></content:encoded>
+            <category>Docusaurus</category>
+            <category>前端</category>
         </item>
     </channel>
 </rss>
