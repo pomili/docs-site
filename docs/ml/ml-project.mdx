@@ -1,0 +1,259 @@
+---
+sidebar_position: 15
+---
+
+# 实战项目：房价预测
+
+用 Scikit-learn 走通完整的机器学习流程，从数据清洗到模型调优。
+
+## 数据集
+
+使用 Kaggle 的房价预测竞赛数据，80 个特征，预测房屋售价：
+
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 加载数据
+train = pd.read_csv('train.csv')
+test = pd.read_csv('test.csv')
+
+print(f"训练集: {train.shape}")
+print(f"测试集: {test.shape}")
+```
+
+## 第一步：探索性数据分析（EDA）
+
+### 目标变量分布
+
+```python
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+sns.histplot(train['SalePrice'], bins=50)
+plt.title('SalePrice Distribution')
+
+# SalePrice 通常右偏，取对数使其更接近正态
+plt.subplot(1, 2, 2)
+sns.histplot(np.log1p(train['SalePrice']), bins=50)
+plt.title('log(SalePrice) Distribution')
+```
+
+### 缺失值分析
+
+```python
+# 查看缺失比例
+missing = train.isnull().sum().sort_values(ascending=False)
+missing_pct = missing[missing > 0] / len(train) * 100
+print(missing_pct.head(20))
+
+# 规则：
+# - 缺失 > 50% → 删除该特征
+# - 缺失 < 5% → 填充（数值用中位数，类别用众数）
+# - 缺失在 5-50% → 创建"是否缺失"的指示特征
+```
+
+### 相关性分析
+
+```python
+# 目标与数值特征的相关性
+numeric_cols = train.select_dtypes(include=[np.number]).columns
+corr = train[numeric_cols].corr()['SalePrice'].sort_values(ascending=False)
+print(corr.head(15))
+print(corr.tail(5))
+```
+
+## 第二步：数据清洗
+
+```python
+def clean_data(df, is_train=True):
+    data = df.copy()
+
+    # ---- 处理缺失值 ----
+    # 数值特征：填中位数
+    num_cols = data.select_dtypes(include=[np.number]).columns
+    for col in num_cols:
+        if data[col].isnull().sum() > 0:
+            data[col] = data[col].fillna(data[col].median())
+
+    # 类别特征：填众数
+    cat_cols = data.select_dtypes(include=['object']).columns
+    for col in cat_cols:
+        if data[col].isnull().sum() > 0:
+            data[col] = data[col].fillna(data[col].mode()[0])
+
+    # ---- 目标变量取对数 ----
+    if is_train:
+        data['SalePrice'] = np.log1p(data['SalePrice'])
+
+    return data
+
+train_clean = clean_data(train, is_train=True)
+test_clean = clean_data(test, is_train=False)
+```
+
+## 第三步：特征工程
+
+```python
+# 合并训练和测试集做统一编码
+all_data = pd.concat([train_clean, test_clean], sort=False)
+
+# 类别特征做 One-Hot / Label 编码
+# 高基数特征（如 Neighborhood）用 Target Encoding
+from sklearn.preprocessing import LabelEncoder
+
+cat_cols = all_data.select_dtypes(include=['object']).columns
+for col in cat_cols:
+    le = LabelEncoder()
+    all_data[col] = le.fit_transform(all_data[col].astype(str))
+
+# ---- 构造新特征 ----
+# 总面积
+all_data['TotalSF'] = (
+    all_data['TotalBsmtSF'] +
+    all_data['1stFlrSF'] +
+    all_data['2ndFlrSF']
+)
+
+# 房屋年龄（售出年份 - 建造年份）
+all_data['HouseAge'] = all_data['YrSold'] - all_data['YearBuilt']
+
+# 是否有地下室
+all_data['HasBsmt'] = (all_data['TotalBsmtSF'] > 0).astype(int)
+
+# ---- 分离回训练/测试 ----
+feat_cols = [c for c in all_data.columns
+             if c not in ['Id', 'SalePrice']]
+X = all_data[:len(train_clean)][feat_cols]
+y = train_clean['SalePrice']
+X_test = all_data[len(train_clean):][feat_cols]
+
+print(f"特征维度: {X.shape}")
+```
+
+## 第四步：建模
+
+### 基线模型
+
+```python
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.model_selection import cross_val_score
+
+def rmse_cv(model, X, y, n_folds=5):
+    """交叉验证的 RMSE"""
+    scores = np.sqrt(-cross_val_score(
+        model, X, y,
+        scoring='neg_mean_squared_error',
+        cv=n_folds, n_jobs=-1,
+    ))
+    return scores.mean(), scores.std()
+
+# 基线：线性回归
+lr = LinearRegression()
+mean, std = rmse_cv(lr, X, y)
+print(f"LR RMSE: {mean:.5f} (±{std:.5f})")
+
+# Ridge 回归
+ridge = Ridge(alpha=10)
+mean, std = rmse_cv(ridge, X, y)
+print(f"Ridge RMSE: {mean:.5f} (±{std:.5f})")
+```
+
+### 集成模型
+
+```python
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+
+# 随机森林
+rf = RandomForestRegressor(
+    n_estimators=300, max_depth=15,
+    min_samples_split=5, n_jobs=-1, random_state=42,
+)
+mean, std = rmse_cv(rf, X, y)
+print(f"RF RMSE: {mean:.5f} (±{std:.5f})")
+
+# Gradient Boosting
+gbr = GradientBoostingRegressor(
+    n_estimators=500, learning_rate=0.05,
+    max_depth=4, min_samples_split=5, random_state=42,
+)
+mean, std = rmse_cv(gbr, X, y)
+print(f"GBR RMSE: {mean:.5f} (±{std:.5f})")
+```
+
+## 第五步：参数调优
+
+```python
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import randint
+
+param_dist = {
+    'n_estimators': randint(200, 600),
+    'max_depth': randint(3, 20),
+    'min_samples_split': randint(2, 20),
+    'min_samples_leaf': randint(1, 10),
+}
+
+rf = RandomForestRegressor(n_jobs=-1, random_state=42)
+search = RandomizedSearchCV(
+    rf, param_dist, n_iter=30,
+    cv=5, scoring='neg_mean_squared_error',
+    n_jobs=-1, random_state=42,
+)
+search.fit(X, y)
+
+print(f"最佳参数: {search.best_params_}")
+print(f"最佳 RMSE: {np.sqrt(-search.best_score_):.5f}")
+
+best_model = search.best_estimator_
+```
+
+## 第六步：特征重要性分析
+
+```python
+importances = best_model.feature_importances_
+indices = np.argsort(importances)[::-1]
+
+# 前 15 个最重要的特征
+for i in range(15):
+    print(f"{i+1}. {feat_cols[indices[i]]}: {importances[indices[i]]:.4f}")
+
+# 可视化
+plt.figure(figsize=(10, 8))
+plt.barh(range(15), importances[indices[:15]][::-1])
+plt.yticks(range(15), [feat_cols[i] for i in indices[:15]][::-1])
+plt.xlabel('Feature Importance')
+```
+
+## 第七步：模型融合
+
+将多个模型的预测做加权平均，通常能获得最后一点提升：
+
+```python
+from sklearn.ensemble import VotingRegressor
+
+ensemble = VotingRegressor([
+    ('ridge', Ridge(alpha=10)),
+    ('rf', RandomForestRegressor(n_estimators=300, max_depth=12)),
+    ('gbr', GradientBoostingRegressor(n_estimators=500, learning_rate=0.05)),
+])
+mean, std = rmse_cv(ensemble, X, y)
+print(f"Ensemble RMSE: {mean:.5f} (±{std:.5f})")
+```
+
+## 总结
+
+一个完整的 ML 项目流程：
+
+```
+EDA → 数据清洗 → 特征工程 → 基线模型 → 集成模型 → 调优 → 模型融合
+```
+
+几点经验：
+
+1. **不要跳过 EDA** — 理解数据比调参更重要
+2. **先搭基线**（线性回归/逻辑回归），确保 pipeline 跑通再上复杂模型
+3. **特征工程决定上限** — 算法的提升空间往往不如好的特征
+4. **交叉验证比单次划分可靠** — 避免意外过拟合
+5. **模型融合是锦上添花** — 单模型调好之后再考虑

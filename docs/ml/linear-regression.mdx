@@ -1,0 +1,170 @@
+---
+sidebar_position: 3
+---
+
+# 线性回归
+
+最简单也最重要的监督学习算法，很多复杂模型的思想都能追溯到它。
+
+## 核心思想
+
+给定特征 $x$，预测连续值 $y$：
+
+$$
+\hat{y} = w x + b
+$$
+
+对于多维特征：
+
+$$
+\hat{y} = \mathbf{w}^T \mathbf{x} + b
+$$
+
+## 损失函数：均方误差（MSE）
+
+$$
+J(\mathbf{w}, b) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+$$
+
+MSE 对异常值敏感，因为它将误差平方放大。
+
+## 求解方法
+
+### 方法一：正规方程（闭式解）
+
+对损失函数求导并设为零，得到解析解：
+
+$$
+\mathbf{w} = (X^T X)^{-1} X^T \mathbf{y}
+$$
+
+```python
+import numpy as np
+from sklearn.datasets import make_regression
+
+X, y = make_regression(n_samples=100, n_features=1, noise=10, random_state=42)
+
+# 添加偏置列
+X_b = np.c_[np.ones((len(X), 1)), X]
+
+# 正规方程：w = (XᵀX)⁻¹ Xᵀy
+w = np.linalg.inv(X_b.T @ X_b) @ X_b.T @ y
+print(f"偏置 b = {w[0]:.2f}")
+print(f"权重 w = {w[1]:.2f}")
+```
+
+**优缺点**：
+- 一步求解，不需要迭代
+- 时间复杂度 $O(n^3)$，特征多时计算量大（$X^T X$ 求逆代价高）
+
+### 方法二：梯度下降
+
+沿着负梯度方向迭代更新参数：
+
+```python
+def gradient_descent(X, y, lr=0.01, epochs=1000):
+    n_samples, n_features = X.shape
+    w = np.zeros(n_features)
+
+    for epoch in range(epochs):
+        y_pred = X @ w
+        grad = -(2 / n_samples) * X.T @ (y - y_pred)  # MSE 梯度
+        w -= lr * grad
+
+        if epoch % 200 == 0:
+            loss = np.mean((y - y_pred) ** 2)
+            print(f"epoch {epoch}: loss = {loss:.4f}")
+
+    return w
+
+# 标准化（梯度下降对尺度敏感）
+X_std = (X - X.mean()) / X.std()
+X_b_std = np.c_[np.ones(len(X_std)), X_std]
+w_gd = gradient_descent(X_b_std, y, lr=0.1)
+```
+
+### 方法三：Scikit-learn
+
+```python
+from sklearn.linear_model import LinearRegression
+
+model = LinearRegression()
+model.fit(X, y)
+print(f"偏置: {model.intercept_:.2f}")
+print(f"权重: {model.coef_[0]:.2f}")
+print(f"R²: {model.score(X, y):.3f}")
+```
+
+## 多项式回归
+
+线性回归不只能拟合直线。通过构造多项式特征，可以拟合曲线：
+
+```python
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import Pipeline
+
+# 3 次多项式拟合
+poly_model = Pipeline([
+    ('poly', PolynomialFeatures(degree=3)),
+    ('linear', LinearRegression()),
+])
+poly_model.fit(X, y)
+```
+
+## 正则化
+
+### Ridge（L2 正则化）
+
+$$
+J = \text{MSE} + \alpha \sum w_j^2
+$$
+
+权重被压缩但不会为零，适合所有特征都有贡献的场景。
+
+### Lasso（L1 正则化）
+
+$$
+J = \text{MSE} + \alpha \sum |w_j|
+$$
+
+会产生稀疏解，部分权重精确为零 → **特征选择**。
+
+### ElasticNet
+
+$$
+J = \text{MSE} + \alpha \left( \rho \sum |w_j| + (1-\rho) \sum w_j^2 \right)
+$$
+
+L1 和 L2 的结合，$\rho$ 控制两者的比例。
+
+```python
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
+
+# L2
+ridge = Ridge(alpha=1.0).fit(X, y)
+# L1
+lasso = Lasso(alpha=0.1).fit(X, y)
+# L1 + L2
+elastic = ElasticNet(alpha=0.1, l1_ratio=0.5).fit(X, y)
+
+print(f"Ridge coef: {ridge.coef_}")
+print(f"Lasso coef: {lasso.coef_}")      # 部分系数可能为 0
+print(f"ElasticNet coef: {elastic.coef_}")
+```
+
+## 关键假设
+
+线性回归有四个核心假设，违反时模型不可靠：
+
+1. **线性性** — 特征和目标是线性关系
+2. **独立性** — 样本之间相互独立
+3. **同方差性** — 误差项的方差恒定
+4. **正态性** — 误差服从正态分布
+
+## 总结
+
+| 特性 | 说明 |
+|------|------|
+| 优点 | 简单、可解释、计算快、有闭式解 |
+| 缺点 | 只能表达线性关系、对异常值敏感 |
+| 适用场景 | 基线模型、特征与目标线性相关的回归任务 |

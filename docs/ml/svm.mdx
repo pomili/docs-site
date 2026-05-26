@@ -1,0 +1,113 @@
+---
+sidebar_position: 5
+---
+
+# 支持向量机（SVM）
+
+SVM 的目标是找到一个超平面，使两个类别之间的**间隔最大化**。
+
+## 核心思想
+
+### 最大间隔分类器
+
+SVM 不仅找一个能分开数据的超平面，还要让超平面离最近的样本点尽可能远：
+
+- **支持向量**：离超平面最近的样本点，决定了超平面的位置
+- **间隔**：两个类别支持向量之间的距离
+
+只有支持向量影响决策边界，其余样本可以丢弃——这使得 SVM 在**小样本**场景下表现出色。
+
+### 硬间隔 vs 软间隔
+
+现实数据往往不是线性可分的。软间隔 SVM 引入松弛变量 $\xi_i$，允许少量点落在间隔内或错分：
+
+$$
+\min \frac{1}{2} \|\mathbf{w}\|^2 + C \sum \xi_i
+$$
+
+- $C$ 大 → 惩罚大 → 尽量不犯错 → 可能过拟合
+- $C$ 小 → 惩罚小 → 容忍犯错 → 更大间隔 → 可能欠拟合
+
+## 核函数：处理非线性数据
+
+当数据在原始空间不可分时，通过核函数映射到高维空间：
+
+| 核函数 | 表达式 | 使用场景 |
+|--------|--------|---------|
+| Linear | $\langle x, x'\rangle$ | 高维稀疏数据（文本分类） |
+| Poly | $(\gamma \langle x, x'\rangle + r)^d$ | 已知多项式关系 |
+| RBF | $e^{-\gamma \|x - x'\|^2}$ | **最常用**，万能近似 |
+| Sigmoid | $\tanh(\gamma \langle x, x'\rangle + r)$ | 类似神经网络 |
+
+### RBF 核的参数选择
+
+- $\gamma$ 大 → 每个样本影响范围小 → 决策边界复杂 → 容易过拟合
+- $\gamma$ 小 → 每个样本影响范围大 → 决策边界平滑 → 容易欠拟合
+
+## Scikit-learn 实现
+
+```python
+from sklearn.svm import SVC
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report
+
+# 月牙形数据（线性不可分）
+X, y = make_moons(n_samples=200, noise=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# SVM 对特征尺度敏感，必须标准化
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# RBF 核 SVM
+model = SVC(kernel='rbf', C=1.0, gamma='scale', probability=True)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+print(classification_report(y_test, y_pred))
+print(f"支持向量数量: {len(model.support_vectors_)}")
+```
+
+## 参数调优
+
+```python
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'C': [0.1, 1, 10, 100],
+    'gamma': ['scale', 'auto', 0.01, 0.1, 1],
+    'kernel': ['rbf', 'linear'],
+}
+
+svc = SVC()
+grid = GridSearchCV(svc, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+grid.fit(X_train, y_train)
+
+print(f"最佳参数: {grid.best_params_}")
+print(f"最佳得分: {grid.best_score_:.3f}")
+```
+
+## SVM 做回归：SVR
+
+SVM 也可以做回归（SVR），思路是找一个函数，使大部分点落在以函数为中心的 $\epsilon$ 管道内。
+
+## 使用建议
+
+1. **先标准化特征** — SVM 对尺度敏感
+2. **默认用 RBF 核** — 大多数情况下表现最好
+3. **先用 GridSearch 粗搜** `C` 和 `gamma`，再细搜
+4. **线性核适合高维稀疏数据**（如文本 TF-IDF）
+5. **样本量 > 10万 时 SVM 会很慢**，考虑用线性模型或树模型替代
+
+## 总结
+
+| 特性 | 说明 |
+|------|------|
+| 优点 | 泛化能力强、小样本效果好、核技巧处理非线性 |
+| 缺点 | 大数据集训练慢、不直接输出概率（需额外配置）、参数敏感 |
+| 适用场景 | 中小数据集、需要高精度的分类任务 |

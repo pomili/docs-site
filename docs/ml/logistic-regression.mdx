@@ -1,0 +1,131 @@
+---
+sidebar_position: 4
+---
+
+# 逻辑回归
+
+名字叫「回归」但实际上是**分类**算法，是二分类问题最常用的基线模型。
+
+## 核心思想
+
+线性回归的输出是连续值，逻辑回归通过 Sigmoid 函数将其压缩到 (0, 1)，解释为概率：
+
+$$
+\hat{p} = \sigma(\mathbf{w}^T \mathbf{x} + b) = \frac{1}{1 + e^{-(\mathbf{w}^T \mathbf{x} + b)}}
+$$
+
+- 当 $\hat{p} \ge 0.5$ → 预测正类
+- 当 $\hat{p} < 0.5$ → 预测负类
+
+```python
+import numpy as np
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+# z=0 时 sigmoid=0.5，正好是决策边界
+print(f"sigmoid(0) = {sigmoid(0):.2f}")
+print(f"sigmoid(4) = {sigmoid(4):.3f}")   # → 0.982
+print(f"sigmoid(-4) = {sigmoid(-4):.3f}") # → 0.018
+```
+
+## 决策边界
+
+$\mathbf{w}^T \mathbf{x} + b = 0$ 就是决策边界（一条直线或超平面），将空间分为两类。
+
+## 损失函数：交叉熵
+
+不能用 MSE（会导致非凸优化），而是用交叉熵：
+
+$$
+J(\mathbf{w}, b) = -\frac{1}{n} \sum_{i=1}^{n} \left[ y_i \log \hat{p}_i + (1 - y_i) \log (1 - \hat{p}_i) \right]
+$$
+
+```python
+def cross_entropy(y_true, y_prob):
+    # 加 eps 防止 log(0)
+    eps = 1e-15
+    y_prob = np.clip(y_prob, eps, 1 - eps)
+    return -np.mean(y_true * np.log(y_prob) + (1 - y_true) * np.log(1 - y_prob))
+```
+
+为什么用交叉熵？
+- 当 $y=1$，$\hat{p} \to 0$ 时 → 损失 $\to \infty$（错得离谱，惩罚很大）
+- 当 $y=1$，$\hat{p} \to 1$ 时 → 损失 $\to 0$（预测正确，惩罚很小）
+
+## 梯度推导
+
+逻辑回归的梯度形式与线性回归**形式上一致**：
+
+$$
+\frac{\partial J}{\partial w_j} = \frac{1}{n} \sum_{i=1}^{n} (\hat{p}_i - y_i) x_{ij}
+$$
+
+```python
+def logistic_regression_gd(X, y, lr=0.1, epochs=1000):
+    n_samples, n_features = X.shape
+    w = np.zeros(n_features)
+
+    for epoch in range(epochs):
+        z = X @ w
+        p = sigmoid(z)
+        grad = (1 / n_samples) * X.T @ (p - y)  # 梯度
+        w -= lr * grad
+
+    return w
+```
+
+## Scikit-learn 实现
+
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, roc_auc_score
+
+X, y = make_classification(
+    n_samples=1000, n_features=10,
+    n_informative=5, random_state=42
+)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+model = LogisticRegression(penalty='l2', C=1.0)  # C 是 1/alpha
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+y_prob = model.predict_proba(X_test)[:, 1]  # 正类概率
+
+print(classification_report(y_test, y_pred))
+print(f"AUC: {roc_auc_score(y_test, y_prob):.3f}")
+```
+
+## 多分类：Softmax 回归
+
+将二分类推广到 K 类，用 Softmax 替代 Sigmoid：
+
+$$
+P(y=k|\mathbf{x}) = \frac{e^{\mathbf{w}_k^T \mathbf{x}}}{\sum_{j=1}^{K} e^{\mathbf{w}_j^T \mathbf{x}}}
+$$
+
+```python
+# Scikit-learn 自动使用 one-vs-rest 或 multinomial
+model = LogisticRegression(multi_class='multinomial', penalty='l2')
+model.fit(X_train, y_train)
+```
+
+## 正则化中的 C 参数
+
+Scikit-learn 的 `C` 是正则强度的**倒数**：
+
+- `C` 越大 → 正则化越弱 → 可能过拟合
+- `C` 越小 → 正则化越强 → 可能欠拟合
+
+## 总结
+
+| 特性 | 说明 |
+|------|------|
+| 优点 | 简单、可解释（权重即特征重要性）、输出概率、计算快 |
+| 缺点 | 本质是线性分类器、对特征共线性敏感 |
+| 适用场景 | 二分类基线、需要概率输出的分类任务 |
