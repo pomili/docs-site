@@ -1,0 +1,241 @@
+# STM32C552CET6 开发环境搭建与固件烧录指南
+
+## 环境需求
+
+### 必装工具
+
+| 工具 | 版本 | 用途 |
+|------|------|------|
+| ARM GCC 工具链 | 14.3+ (arm-none-eabi-gcc) | 交叉编译 |
+| CMake | 3.20+ | 构建系统 |
+| Ninja | 1.10+ | 构建执行器 |
+| Python | 3.8+ | pyOCD 运行环境 |
+| pyOCD | 0.44+ | 固件烧录/调试 |
+
+### 硬件需求
+
+| 硬件 | 说明 |
+|------|------|
+| STM32C552CET6 开发板 | 目标板 |
+| DAP-Link 调试器 | CMSIS-DAP 协议 |
+| USB 数据线 | 连接 DAP-Link 和 PC |
+
+---
+
+## 工具安装
+
+### 1. ARM GCC 工具链
+
+下载 Arm GNU Toolchain：
+https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+
+选择 **Windows mingw-w64 x86_64 arm-none-eabi**。
+
+安装后验证：
+```bash
+arm-none-eabi-gcc --version
+# 预期输出: arm-none-eabi-gcc.exe (Arm GNU Toolchain 15.x) ...
+```
+
+### 2. CMake
+
+下载：https://cmake.org/download/
+
+```bash
+cmake --version
+# 预期输出: cmake version 3.20+
+```
+
+### 3. Ninja
+
+下载：https://github.com/ninja-build/ninja/releases
+
+把 `ninja.exe` 放到 PATH 目录下。
+
+```bash
+ninja --version
+# 预期输出: 1.x.x
+```
+
+### 4. pyOCD
+
+```bash
+pip install pyocd
+```
+
+安装 STM32C5xx 芯片包：
+```bash
+pyocd pack install STM32C552CET6
+```
+
+验证：
+```bash
+pyocd --version
+pyocd list --targets | findstr STM32C552
+# 预期看到 STM32C552CET6
+```
+
+---
+
+## 项目结构
+
+```
+led_cmake/
+├── CMakeLists.txt               # CMake 工程文件
+├── CMakePresets.json             # 预设配置（debug_GCC_STM32C552CET6）
+├── main.c                        # 用户主程序
+├── main.h                        # 用户主程序头文件
+├── cmake/                        # CMake 模块
+│   ├── GCC.14.3.1.cmake          # 工具链文件（指定 arm-none-eabi-gcc）
+│   ├── target.cmake              # 芯片参数（Cortex-M33, SP_FPU, DSP...）
+│   ├── files.cmake               # 用户源文件列表
+│   ├── flags.cmake               # 编译/链接选项
+│   └── components.cmake          # CMSIS 组件依赖
+├── generated/hal/                # CubeMX 生成的外设初始化代码
+│   ├── mx_system.c               # 系统初始化（调用链入口）
+│   ├── mx_rcc.c                  # 时钟配置（PSI 倍频）
+│   ├── mx_gpio_default.c         # GPIO 初始化
+│   └── ...
+├── stm32c5xx_drivers/            # STM32C5xx HAL/LL 驱动
+├── stm32c5xx_dfp/                # Device Family Pack
+├── user_modifiable/              # 可修改的板级文件
+│   └── Device/STM32C552CET6/
+│       ├── startup_stm32c552xx.c # 启动文件
+│       └── system_stm32c5xx.c    # 系统时钟计算
+├── utilities/                    # syscalls、sysmem 等
+└── build/                        # 构建输出目录
+```
+
+---
+
+## 构建命令
+
+### 配置（生成 Ninja 构建文件）
+
+```bash
+cd F:/cube2_c552/led_cmake
+cmake --preset debug_GCC_STM32C552CET6
+```
+
+`CMakePresets.json` 中预设了：
+- 生成器: Ninja
+- 工具链文件: `cmake/GCC.14.3.1.cmake`
+- 构建类型: `debug_GCC_STM32C552CET6`
+- 输出目录: `build/debug_GCC_STM32C552CET6/`
+
+### 编译
+
+```bash
+cmake --build --preset debug_GCC_STM32C552CET6
+```
+
+### 清理重新编译
+
+```bash
+cmake --build --preset debug_GCC_STM32C552CET6 --clean-first
+```
+
+### 产物
+
+```
+build/debug_GCC_STM32C552CET6/led.elf   # ELF 可执行文件（含调试信息）
+```
+
+---
+
+## 烧录命令
+
+### 检查调试器连接
+
+```bash
+pyocd list --probes
+```
+
+预期看到 DAP-Link 设备。
+
+### 烧录固件
+
+```bash
+cd F:/cube2_c552/led_cmake
+pyocd flash -t STM32C552CET6 build/debug_GCC_STM32C552CET6/led.elf
+```
+
+参数说明：
+- `-t STM32C552CET6`: 目标芯片型号，pyOCD 会自动匹配 CMSIS-Pack 中的 flash 算法
+- 最后一个参数: 要烧录的 .elf 文件
+
+预期输出：
+```
+Erased N bytes, programmed N bytes at X.XX kB/s
+```
+
+---
+
+## 完整流程
+
+```bash
+# 0. 进入项目目录
+cd F:/cube2_c552/led_cmake
+
+# 1. 配置
+cmake --preset debug_GCC_STM32C552CET6
+
+# 2. 编译
+cmake --build --preset debug_GCC_STM32C552CET6
+
+# 3. 烧录
+pyocd flash -t STM32C552CET6 build/debug_GCC_STM32C552CET6/led.elf
+```
+
+---
+
+## 验证
+
+1. 插上 DAP-Link，连接开发板
+2. 执行 `pyocd list --probes`，确认调试器被识别
+3. 执行完整流程（配置 → 编译 → 烧录）
+4. 观察开发板上的 PC13 LED 是否按预期闪烁
+
+---
+
+## 常见问题
+
+### HSE HAL 函数编译报错
+
+```
+error: implicit declaration of function 'HAL_RCC_HSE_Enable'
+```
+
+**原因**: `HSE_VALUE` 宏未定义。`stm32_external_env.h` 模板文件不在编译器 include path 中。
+
+**解决**: 使用 LL API 替代 HAL API：
+```c
+LL_RCC_HSE_Enable();          // 替代 HAL_RCC_HSE_Enable(HAL_RCC_HSE_ON)
+while (!LL_RCC_HSE_IsReady()); // 等待就绪
+```
+
+### 100MHz 正常，144MHz 不工作
+
+**原因**: Flash 等待周期不够。
+
+```
+100MHz + 4WS: (1+4) × 10ns = 50ns ✓
+144MHz + 4WS: (1+4) × 6.94ns = 34.7ns ✗ 取指令超时
+144MHz + 5WS: (1+5) × 6.94ns = 41.7ns ✓
+```
+
+**解决**: 升频时同步加大 Flash 等待周期：
+```c
+HAL_FLASH_ITF_SetLatency(HAL_FLASH, HAL_FLASH_ITF_LATENCY_5);
+```
+
+### DAP-Link 未识别
+
+```bash
+pyocd list --probes
+# No available debug probes are connected
+```
+
+- 检查 USB 数据线连接
+- 检查 DAP-Link 指示灯
+- 检查 Windows 设备管理器是否识别 CMSIS-DAP 设备
