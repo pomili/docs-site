@@ -1,0 +1,463 @@
+# STM32CubeMX2 完整使用指南
+
+> 基于 STM32CubeMX2 v1.0.1 官方文档整理（索引版本为 1.0.0，后续版本 URL 结构相同）
+> 来源: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.1/en/index.html
+
+---
+
+## 一、什么是 STM32CubeMX2
+
+STM32CubeMX2 是 ST 官方推出的新一代图形化配置工具。根据官方文档，核心功能包括：
+
+- **工程创建与打开** — 从 MCU / Board 开始，或打开已有的 `.ioc2` 文件
+- **快速配置** — 可视化配置 MCU 引脚和时钟树
+- **外设设置** — 添加和配置外设（ADC、UART、Timer 等）
+- **中间件和工具库** — 查看/激活默认中间件，按需添加额外中间件
+- **部件（Parts）视图** — 激活和管理挂载的外部器件
+- **代码预览** — 在工程生成前查看和对比生成的代码
+- **工程生成** — 生成包含所需库和初始化代码的完整工程
+- **Pack 管理** — 检查、安装、卸载、更新 CMSIS 软件包
+
+### CubeMX vs CubeMX2
+
+| | CubeMX (旧) | CubeMX2 (新) |
+|---|---|---|
+| HAL 版本 | HAL1 | **HAL2**（基于 LL 静态内联函数） |
+| 支持芯片 | STM32F0~H7、MP1 等 | **STM32C5** 及未来新系列 |
+| 工程文件 | `.ioc` | `.ioc2` |
+| 用户代码保护 | `USER CODE BEGIN/END` 注释块 | **文件目录分离**（`generated/` 与用户文件分开存放） |
+| 代码预览 | 不支持 | **实时预览 + diff 对比** |
+| UI 操作 | 基础 | 鼠标拖拽平移、Ctrl+滚轮缩放、路径高亮、Split View |
+| Pack 管理 | 内置 | Open-CMSIS 标准（`cpackget`） |
+
+---
+
+## 二、安装与启动
+
+从 ST 官网下载：https://www.st.com/en/development-tools/stm32cubemx.html
+
+支持 Windows / Linux / macOS，Java 运行时内置。
+
+---
+
+## 三、主界面与导航
+
+### 侧边栏标签页
+
+根据官方文档，主界面包含以下导航入口：
+
+| 标签页 | 功能 |
+|--------|------|
+| **Pinout** | 芯片引脚图，分配引脚功能 |
+| **Clock** | 图形化时钟树配置 |
+| **Peripherals** | 外设列表，参数配置，GPIO/DMA/NVIC/EXTI 视图入口 |
+| **Middleware** | 中间件和工具库管理 |
+| **Parts** | 外部器件管理（传感器、存储器等） |
+| **Project settings** | 工程设置、IDE 格式选择、高级设置、代码生成 |
+
+### 通用操作
+
+| 操作 | 方式 |
+|------|------|
+| 平移画布 | 按住鼠标中键拖拽 |
+| 缩放 | Ctrl + 滚轮 |
+| Split View | 将面板水平或垂直分屏，支持拖拽标签页创建自定义布局 |
+| 搜索 | 顶部搜索框支持按外设名、引脚名、功能 ID 搜索 |
+
+---
+
+## 四、创建新工程
+
+### 首页三种入口
+
+| 入口 | 说明 |
+|------|------|
+| **MCU** | 从芯片型号开始创建 |
+| **Board** | 从开发板开始（如 NUCLEO-C562RE） |
+| **Project** | 打开已有的 `.ioc2` 文件 |
+
+### MCU 方式创建步骤
+
+1. 点击 **MCU** → 搜索并选择目标芯片（如 STM32C552CET6）
+2. 输入工程名和保存路径
+3. 点击 **"Automatically Download, Install & Create Project"**
+4. CubeMX2 自动下载所需的 CMSIS-Pack 并创建工程骨架
+
+---
+
+## 五、Pinout 引脚配置
+
+### 引脚颜色含义
+
+| 颜色 | 含义 |
+|------|------|
+| 绿色 | 已配置功能 |
+| 灰色 | 未使用 |
+| 红色 | 硬件冲突（两个外设争用同一引脚） |
+| 橙色 | 软件冲突，可选择自动解决 |
+
+### 操作方式
+
+- **单击引脚** → 弹出功能选择菜单（GPIO / 复用功能 / 模拟）
+- **右键引脚** → 更多选项（锁定、重置、查看信号列表）
+- **搜索框** → 按外设名、引脚名或信号名搜索
+- **自动冲突解决** → 外设争用引脚时提示并推荐替代引脚
+- **用户标签** → 给引脚起别名（如 `LED_PIN`），生成的代码里用这个宏
+
+### 外设分类
+
+左侧列出所有可用外设，按类别分组：
+
+| 类别 | 外设 |
+|------|------|
+| **System Core** | GPIO、NVIC、RCC、SysTick、DMA、EXTI |
+| **Analog** | ADC、DAC、COMP、OPAMP、VREFBUF |
+| **Timers** | TIM1~TIM22、LPTIM |
+| **Connectivity** | USART、UART、SPI、I2C、I3C、USB、CAN、FDCAN、ETH |
+| **Security** | CRYP、HASH、PKA、SAES、TRNG |
+
+---
+
+## 六、Clock 时钟配置
+
+### 时钟树视图
+
+图形化展示完整时钟树，与芯片参考手册一致。以 STM32C5 为例：
+
+```
+HSI(144MHz) / HSE(外部晶振) / MSI / LSE(32.768KHz)
+    │
+    ├── PSI（精密系统集成器，STM32C5 无传统 PLL）
+    │     ├── PSIS → SYSCLK（系统时钟）
+    │     ├── PSIK → 外设内核时钟
+    │     └── PSIDIV3 → PSI 三分频输出
+    │
+    └── SYSCLK
+          ├── AHB Prescaler → HCLK → Cortex-M 核、SRAM、Flash
+          ├── APB1 Prescaler → PCLK1 → APB1 外设
+          ├── APB2 Prescaler → PCLK2 → APB2 外设
+          └── APB3 Prescaler → PCLK3 → APB3 外设
+```
+
+> 注意：STM32C5 的 HSI 内部振荡器频率是 144MHz（通过 `HSI_VALUE` 宏定义），上电复位默认值 4.8MHz。
+
+### 关键操作
+
+| 操作 | 方式 |
+|------|------|
+| 选时钟源 | 点击 HSE/HSI/PSI 的单选按钮 |
+| 调分频/倍频 | 下拉框选值或直接输入数字 |
+| 高亮路径 | 点击任意时钟节点 → 上下游路径反色高亮 |
+| 锁定频率 | 右键蓝色边框矩形 → Lock，锁定后自动求解不会改变该值 |
+| 时钟复位 | 点击 **Reset Clock** 按钮恢复默认值 |
+| 自动求解 | 点击 **Resolve Clock Issues** 按钮，工具尝试找到合法解 |
+
+### Table View
+
+除了图形化时钟树，也可以切换到表格视图配置时钟参数。
+
+### 动态验证
+
+- 输入非法值 → 实时标红
+- 外设频率超过芯片规格 → 警告提示
+- 约束实时检查，不依赖"生成时才发现"
+
+### PSI（精密系统集成器）
+
+STM32C5 系列使用 PSI 替代传统 PLL。参数由 CubeMX2 时钟界面配置：
+
+| PSI 参数 | 选项 |
+|----------|------|
+| 参考源 | HSE、LSE、HSI÷18 |
+| 参考频率 | 32.768kHz、8/16/24/25/32/48/50 MHz |
+| 输出频率 | 100MHz、144MHz、160MHz |
+
+### 外设独立时钟
+
+USART、SPI、I2C、FDCAN、ETH 等可以选择独立时钟源，不依赖 APB 总线时钟。
+
+---
+
+## 七、Peripherals 外设面板
+
+### 面板功能（官方文档列出的 7 项能力）
+
+| # | 功能 | 说明 |
+|---|------|------|
+| 1 | 外设列表 | 按类别/状态筛选，按字母排序 |
+| 2 | 搜索 | 快速定位外设 |
+| 3 | GPIO/DMA/EXTI/NVIC 视图 | 点击按钮在新窗口打开对应视图 |
+| 4 | 使能/关闭 | 点击外设启用后进入配置页 |
+| 5 | 代码预览 & Quick Menu | 预览 `.h`/`.c` 文件，Quick Menu 快速跳转配置段 |
+| 6 | 刷新 | 手动刷新界面 |
+| 7 | Split View | 水平或垂直分屏显示 |
+
+### 外设配置页
+
+启用外设后打开配置页，以 ADC 为例：
+
+```
+ADC1 配置页:
+  ├── Parameter Settings
+  │   ├── Mode: Independent / Dual
+  │   ├── Clock Prescaler: ÷1 / ÷2 / ÷4
+  │   ├── Resolution: 12-bit / 10-bit / 8-bit
+  │   ├── Scan Conversion Mode: Enable / Disable
+  │   └── Continuous Conversion Mode: Enable / Disable
+  ├── NVIC Settings（中断使能和优先级）
+  ├── DMA Settings（通道、方向、宽度、循环模式）
+  ├── GPIO Settings（引脚配置汇总）
+  └── User Constants（自定义常量）
+```
+
+配置页还包含：Reset Configuration（重置为默认）、展开/折叠配置分组、代码预览等功能。
+
+### NVIC 中断配置
+
+在 Peripherals 面板点击 NVIC 按钮打开独立窗口，可配置：
+- 中断使能/关闭
+- 抢占优先级（Preemption Priority）
+- 子优先级（Subpriority）
+- 优先级分组（Priority Grouping）
+
+### DMA 配置
+
+- DMA 通道选择
+- 传输方向（外设→内存 / 内存→外设 / 内存→内存）
+- 数据宽度（Byte / Half Word / Word）
+- 模式（Normal / Circular）
+- 地址递增（外设 / 内存）
+
+---
+
+## 八、中间件与部件
+
+### Middleware 面板
+
+| 中间件 | 说明 |
+|--------|------|
+| FreeRTOS | CMSIS-V2 接口的实时操作系统 |
+| ThreadX | Azure RTOS 内核 |
+| USBX | USB 主机/设备协议栈 |
+| FileX / LevelX | 文件系统和磨损均衡 |
+| NetX Duo | TCP/IP 网络协议栈 |
+
+可查看和激活默认中间件，按需添加额外中间件组件。
+
+### CMSIS 组件依赖管理
+
+- 选一个中间件 → 自动引入所有依赖组件
+- `components.cmake` 列出所有 CMSIS 组件及版本号
+- `target_link_libraries` 串联组件依赖链
+
+### Parts 面板
+
+用于管理外部硬件部件：
+
+| 功能 | 说明 |
+|------|------|
+| 激活挂载部件 | 启用开发板上已有的外部器件（传感器、存储器等） |
+| 添加独立部件 | 手动添加额外的外部器件 |
+| 配置界面 | 每个部件有独立的参数页 |
+
+---
+
+## 九、Project Settings 与代码生成
+
+### Project Settings
+
+CubeMX2 的工程设置统一在一个面板中：
+
+| 设置 | 内容 |
+|------|------|
+| 工程名 | 自定义 |
+| 工程路径 | 自定义 |
+| 芯片型号 | 当前选中的 MCU |
+| IDE 格式 | **CMake** / **IAR EWARM** / **Open-CMSIS** |
+| 工具链 | CMake→GCC；Open-CMSIS→AC6/GCC/IAR 可选 |
+
+### 三种工程格式
+
+| 格式 | 工程目录后缀 | 默认工具链 | 兼容 IDE |
+|------|-----------|-----------|---------|
+| **CMake** | `_cmake` | GCC | STM32CubeIDE for VS Code、CLion、命令行 |
+| **IAR EWARM** | `_ewarm` | IAR | IAR EWARM |
+| **Open-CMSIS** | `_open-cmsis` | AC6（可切换） | Keil µVision、Keil Studio |
+
+### Advanced Settings
+
+| 设置 | 说明 |
+|------|------|
+| 用户可修改文件路径 | 自定义 `user_modifiable/` 目录位置 |
+| 生成代码目录名 | 自定义 `generated/` 目录名 |
+| 外部源（Packs 来源） | **Include fresh packs**（自包含，下载新包）/ **Include packs from local**（从本地 `$CMSIS_PACK_ROOT` 复制） |
+| 移除 Board Pack | 排除 BSP 包 |
+| 自定义目录 | 按类别组织 Pack 目录 |
+| 冲突处理规则 | 按文件类型分别设置（见下方） |
+
+### 冲突处理规则
+
+重新生成代码时，对不同类型的文件可分别配置策略：
+
+| 策略 | 说明 |
+|------|------|
+| Show conflicting files | 列出冲突文件，不自动处理 |
+| Don't generate | 保留现有文件，不覆盖 |
+| Backup | 备份旧文件后覆盖 |
+| Overwrite | 直接覆盖 |
+
+### 代码预览
+
+CubeMX2 的核心新功能之一：
+
+- 不需要完整生成工程就能看到生成代码
+- 修改配置后预览窗口实时刷新
+- **Diff 对比**：修改配置后可以看到代码的增量变化（哪些行新增、删除、修改）
+- 可以直接从预览窗口复制代码片段到已有工程
+
+### 生成按钮
+
+配置完成后点击左下角黄色 **Generate** 按钮。
+
+### 生成的目录结构（CMake 格式）
+
+```
+MyProject_cmake/
+├── CMakeLists.txt                 # CMake 构建配置
+├── CMakePresets.json              # CMake 预设
+├── main.c / main.h                # 用户应用入口（项目根目录，不在子文件夹中）
+├── .settings/                     # CubeMX2 元数据，用于追踪和重新生成
+├── arch/                          # CMSIS Core 架构文件
+│   └── cmsis/CMSIS/Core/Include/
+├── cmake/                         # CMake 工具链文件和模块
+│   ├── GCC.xx.xx.cmake            # 工具链文件
+│   ├── target.cmake               # 芯片参数
+│   ├── files.cmake                # 用户源文件列表
+│   ├── flags.cmake                # 编译/链接选项
+│   └── components.cmake           # CMSIS 组件依赖
+├── generated/                     # 自动生成代码，每次重新生成覆盖
+│   ├── hal/                       # 外设初始化（mx_system.c、mx_rcc.c、mx_gpio_xxx.c 等）
+│   ├── middleware/                 # 中间件配置
+│   ├── parts/                     # 外部器件驱动
+│   └── utilities/                 # syscalls 等
+├── stm32c5xx_dfp/                 # Device Family Pack
+├── stm32c5xx_drivers/             # HAL/LL 驱动库
+│   ├── hal/                       # HAL 驱动
+│   ├── ll/                        # LL 驱动（仅头文件，静态内联函数）
+│   └── timebases/                 # 时基源
+├── user_modifiable/               # 用户可修改文件，重新生成时保留
+│   └── Device/STM32C552CET6/
+│       ├── startup_stm32c552xx.c  # 启动文件
+│       └── system_stm32c5xx.c     # 系统时钟计算函数
+└── utilities/                     # 工具源文件（syscalls、sysmem）
+```
+
+### 三个关键目录的规则
+
+| 目录 | 重新生成时 | 放什么 |
+|------|-----------|--------|
+| `generated/` | ✅ 覆盖 | 外设初始化、系统初始化、中间件等 CubeMX2 生成代码 |
+| `main.c`（根目录） | ❌ 不覆盖 | 用户应用代码 |
+| `user_modifiable/` | ❌ 不覆盖 | 启动文件、链接脚本、`Pre_Include_Global.h` |
+
+> **与经典 CubeMX 的关键区别**：不再使用 `USER CODE BEGIN/END` 注释块。用户代码放在根目录和 `user_modifiable/` 中，与 `generated/` 中的生成代码物理隔离。
+
+### CMakeLists.txt 用户扩展位置
+
+CubeMX2 生成的 `CMakeLists.txt` 留有用户扩展插槽：
+
+```cmake
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+  # Add additional source files here
+)
+
+target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
+  # Add additional include directories here
+)
+```
+
+---
+
+## 十、Pack 管理
+
+CMSIS-Pack 是 ARM 制定的软件包标准（`.pack` 文件），STM32CubeMX2 基于 Open-CMSIS 生态。
+
+| 概念 | 说明 |
+|------|------|
+| DFP | Device Family Pack — 芯片支持包（头文件、Flash 算法、启动文件） |
+| HAL/LL Pack | 外设驱动库 |
+| Middleware Pack | 中间件（RTOS、USB、TCP/IP） |
+| Board Pack | 开发板 BSP |
+| Part Pack | 外部器件驱动 |
+
+### Pack 操作
+
+| 操作 | 路径 |
+|------|------|
+| 自动下载 | 创建工程时自动获取所需 Pack |
+| 手动安装 | `File → Import pack` |
+| 查看/管理 | `File → Manage Packs` |
+| 更新 | Pack 有新版本时提示更新 |
+
+---
+
+## 十一、完整工作流程
+
+```
+ 1. 打开 CubeMX2
+ 2. 创建新工程（选 MCU 或 Board）
+ 3. CubeMX2 自动下载 Pack、创建工程骨架
+ 4. Pinout → 分配引脚功能、添加外设
+ 5. Clock → 选时钟源、设 PSI 倍频、调分频
+    （可用 Resolve Clock Issues 自动求解，也可手动调整 + 实时验证）
+ 6. Peripherals → 打开外设配置页，设参数、NVIC、DMA
+ 7. Middleware（可选）→ 添加 FreeRTOS / USB / TCP/IP
+ 8. Parts（可选）→ 配置外部传感器 / 存储器
+ 9. Project Settings → 选 CMake / IAR / Open-CMSIS
+10. Advanced Settings → 设置冲突处理规则等
+11. 代码预览（可选）→ 查看和对比生成代码
+12. 点击 Generate → 生成完整工程
+13. 用 CMake 编译工程
+14. 烧录、调试
+15. 需要改配置 → 重新打开 .ioc2 → 修改 → 重新生成
+    generated/ 被覆盖，根目录和 user_modifiable/ 保留
+```
+
+---
+
+## 十二、HAL2 架构概要
+
+### HAL2 与 HAL1 的差异
+
+| | HAL1 | HAL2 |
+|---|---|---|
+| 实现方式 | 函数调用 LL 后封装 | **在 LL 静态内联函数之上构建** |
+| LL 独立初始化 | `stm32xx_ll_ppp.c` 中有独立 Init 函数 | LL 无 `.c` 文件，Init 全靠头文件中的静态内联 |
+| 外设初始化方式 | HAL 和 LL 可分别独立使用 | **LL 不再提供独立 Init 函数，必须通过 CubeMX2 生成**或用 HAL |
+| 中间件架构 | 各自独立 | 统一的两路径模型 |
+
+### 中间件两路径模型
+
+所有 HAL2 中间件、工具库和 Part 驱动遵循统一架构：
+
+| 路径 | 职责 |
+|------|------|
+| **资源初始化路径** | 硬件外设、内存分配、OS 资源初始化——系统初始化阶段完成（可由 CubeMX2 生成） |
+| **服务使用路径** | 应用层通过逻辑实例对象调用中间件 API |
+
+---
+
+## 参考资料
+
+- 官方文档（v1.0.1）: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.1/en/index.html
+- 快速入门: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_How_To_Quickly_Start.html
+- 导航与页面结构: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_How_To_Start/CubeMX2_TransversalTopics.html
+- 时钟配置指南: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_How_To/CubeMX2_How_To_Configure_Clock.html
+- Peripherals 面板: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_UserManual/CubeMX2_UserManual_Peripherals.html
+- IDE 工程生成: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_UserManual/CubeMX2_UserManual_IDE_ProjectGen.html
+- NVIC 配置: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_How_To/CubeMX2_How_To_Configure_NVIC.html
+- 代码生成: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_How_To/CubeMX2_How_To_Generate_Code.html
+- FAQ: https://dev.st.com/stm32cube-docs/stm32cubemx2/1.0.0/en/docs/markup/CubeMX2_FAQ.html
+- HAL2 迁移指南: https://dev.st.com/stm32cube-docs/hal1-to-hal2-migration/
+- 中间件架构: https://dev.st.com/stm32cube-docs/embedded-software/2.0.0/en/architecture/middleware-architecture.html
+- ST 社区教程: https://community.st.com/t5/stm32-mcus/how-to-create-a-new-project-with-stm32cubemx2/ta-p/872643
