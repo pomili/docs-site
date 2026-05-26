@@ -1,6 +1,10 @@
-# STM32C552CET6 开发环境搭建与固件烧录指南
+# STM32C5xx CMake 工程开发指南
 
-## 环境需求
+> 适用于 STM32CubeMX2 生成的 CMake 工程（STM32C5 系列）
+
+---
+
+## 一、环境需求
 
 ### 必装工具
 
@@ -12,29 +16,26 @@
 | Python | 3.8+ | pyOCD 运行环境 |
 | pyOCD | 0.44+ | 固件烧录/调试 |
 
-### 硬件需求
+### 硬件
 
 | 硬件 | 说明 |
 |------|------|
-| STM32C552CET6 开发板 | 目标板 |
-| DAP-Link 调试器 | CMSIS-DAP 协议 |
-| USB 数据线 | 连接 DAP-Link 和 PC |
+| STM32C5xx 开发板 | 目标板 |
+| DAP-Link 或 ST-Link 调试器 | CMSIS-DAP / ST-Link 协议 |
+| USB 数据线 | 连接调试器和 PC |
 
 ---
 
-## 工具安装
+## 二、工具安装
 
 ### 1. ARM GCC 工具链
 
-下载 Arm GNU Toolchain：
-https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+下载：https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
 
-选择 **Windows mingw-w64 x86_64 arm-none-eabi**。
+选择对应平台的 **arm-none-eabi** 版本，安装后验证：
 
-安装后验证：
 ```bash
 arm-none-eabi-gcc --version
-# 预期输出: arm-none-eabi-gcc.exe (Arm GNU Toolchain 15.x) ...
 ```
 
 ### 2. CMake
@@ -43,199 +44,501 @@ arm-none-eabi-gcc --version
 
 ```bash
 cmake --version
-# 预期输出: cmake version 3.20+
 ```
 
 ### 3. Ninja
 
 下载：https://github.com/ninja-build/ninja/releases
 
-把 `ninja.exe` 放到 PATH 目录下。
+将 `ninja` 放入 PATH。
 
 ```bash
 ninja --version
-# 预期输出: 1.x.x
 ```
 
 ### 4. pyOCD
 
 ```bash
 pip install pyocd
-```
-
-安装 STM32C5xx 芯片包：
-```bash
-pyocd pack install STM32C552CET6
+pyocd pack install <芯片型号>   # 如 STM32C552CET6
 ```
 
 验证：
+
 ```bash
 pyocd --version
-pyocd list --targets | findstr STM32C552
-# 预期看到 STM32C552CET6
+pyocd list --targets | findstr <芯片型号>
 ```
 
 ---
 
-## 项目结构
+## 三、项目结构（CubeMX2 生成）
 
 ```
-led_cmake/
-├── CMakeLists.txt               # CMake 工程文件
-├── CMakePresets.json             # 预设配置（debug_GCC_STM32C552CET6）
+project_cmake/
+├── CMakeLists.txt               # CMake 工程文件（用户扩展插槽在此）
+├── CMakePresets.json             # CMake 预设
 ├── main.c                        # 用户主程序
 ├── main.h                        # 用户主程序头文件
-├── cmake/                        # CMake 模块
-│   ├── GCC.14.3.1.cmake          # 工具链文件（指定 arm-none-eabi-gcc）
-│   ├── target.cmake              # 芯片参数（Cortex-M33, SP_FPU, DSP...）
+├── cmake/
+│   ├── GCC.xx.xx.cmake           # 工具链文件
+│   ├── target.cmake              # 芯片参数（CPU 核心、FPU、DSP 等）
 │   ├── files.cmake               # 用户源文件列表
 │   ├── flags.cmake               # 编译/链接选项
 │   └── components.cmake          # CMSIS 组件依赖
+├── arch/cmsis/                   # CMSIS Core 头文件
 ├── generated/hal/                # CubeMX 生成的外设初始化代码
-│   ├── mx_system.c               # 系统初始化（调用链入口）
-│   ├── mx_rcc.c                  # 时钟配置（PSI 倍频）
+│   ├── mx_system.c               # 系统初始化入口
+│   ├── mx_rcc.c                  # 时钟配置
 │   ├── mx_gpio_default.c         # GPIO 初始化
-│   └── ...
-├── stm32c5xx_drivers/            # STM32C5xx HAL/LL 驱动
+│   └── mx_*.c/h                  # 其他外设
+├── stm32c5xx_drivers/
+│   ├── hal/                      # HAL 驱动
+│   ├── ll/                       # LL 驱动（仅头文件，静态内联函数）
+│   └── timebases/                # 时基源
 ├── stm32c5xx_dfp/                # Device Family Pack
 ├── user_modifiable/              # 可修改的板级文件
-│   └── Device/STM32C552CET6/
-│       ├── startup_stm32c552xx.c # 启动文件
-│       └── system_stm32c5xx.c    # 系统时钟计算
-├── utilities/                    # syscalls、sysmem 等
-└── build/                        # 构建输出目录
+│   └── Device/<芯片型号>/
+│       ├── startup_*.c           # 启动文件
+│       └── system_*.c            # SystemCoreClock 计算
+├── utilities/                    # syscalls、sysmem
+└── build/                        # 构建输出
+```
+
+### CubeMX2 代码保护机制
+
+| 目录 | 重新生成时 | 放什么 |
+|------|-----------|--------|
+| `generated/` | ✅ 覆盖 | 外设初始化、系统初始化 |
+| 根目录 (`main.c` 等) | ❌ 不覆盖 | 用户应用代码 |
+| `user_modifiable/` | ❌ 不覆盖 | 启动文件、链接脚本 |
+
+> CubeMX2 不再使用 `USER CODE BEGIN/END` 注释块，通过目录分离保护用户代码。
+
+---
+
+## 四、时钟系统
+
+### 典型配置
+
+STM32C5 系列使用 PSI（精密系统集成器）替代传统 PLL：
+
+```
+HSI(144MHz) 或 HSE(外部晶振)
+  └── PSI 倍频 → PSIS → SYSCLK
+        ├── HCLK  (AHB  Prescaler)
+        ├── PCLK1 (APB1 Prescaler)
+        ├── PCLK2 (APB2 Prescaler)
+        └── PCLK3 (APB3 Prescaler)
+```
+
+### PSI 参数
+
+| 参数 | 选项 |
+|------|------|
+| 参考源 | HSE、LSE、HSI÷18 |
+| 参考频率 | 32768Hz、8/16/24/25/32/48/50 MHz |
+| 输出频率 | 100MHz、144MHz、160MHz |
+
+### Flash Wait States
+
+| 频率 | 最小 WS | 访问时间 | 建议 |
+|------|--------|---------|------|
+| 48MHz | 0WS | ~21ns | 安全 |
+| 100MHz | 4WS | ~50ns | 安全 |
+| 144MHz | 5WS | ~42ns | 临界，建议 7WS |
+| 160MHz | 7WS | ~50ns | 安全 |
+
+> WS 不够的典型现象：程序能启动但跑一会就死——Flash 读取在高温/高压降下超时。
+
+### 系统初始化调用链
+
+```
+main()
+  └── mx_system_init()              // generated/hal/mx_system.c
+        ├── pre_system_init_hook()   // 用户前置钩子
+        ├── mx_cortex_mpu_init()     // MPU 初始化
+        ├── HAL_Init()              // SysTick 初始化
+        ├── mx_cortex_nvic_init()    // NVIC 中断配置
+        ├── mx_icache_init()        // ICACHE 初始化
+        ├── mx_rcc_init()           // 时钟配置 ★
+        ├── mx_rcc_peripherals_clock_config()  // 外设时钟使能
+        ├── mx_flash_init()         // Flash 初始化
+        └── post_system_init_hook()  // 用户后置钩子
 ```
 
 ---
 
-## 构建命令
+## 五、构建
 
-### 配置（生成 Ninja 构建文件）
+### 配置
 
 ```bash
-cd F:/cube2_c552/led_cmake
-cmake --preset debug_GCC_STM32C552CET6
+cmake --preset debug_GCC_<芯片型号>
 ```
-
-`CMakePresets.json` 中预设了：
-- 生成器: Ninja
-- 工具链文件: `cmake/GCC.14.3.1.cmake`
-- 构建类型: `debug_GCC_STM32C552CET6`
-- 输出目录: `build/debug_GCC_STM32C552CET6/`
 
 ### 编译
 
 ```bash
-cmake --build --preset debug_GCC_STM32C552CET6
+cmake --build --preset debug_GCC_<芯片型号>
 ```
 
-### 清理重新编译
+### 清理重编译
 
 ```bash
-cmake --build --preset debug_GCC_STM32C552CET6 --clean-first
+cmake --build --preset debug_GCC_<芯片型号> --clean-first
 ```
 
 ### 产物
 
 ```
-build/debug_GCC_STM32C552CET6/led.elf   # ELF 可执行文件（含调试信息）
+build/debug_GCC_<芯片型号>/<工程名>.elf
+```
+
+### 添加源文件
+
+编辑根目录的 `CMakeLists.txt`：
+
+```cmake
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+  my_module.c
+)
+
+target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
+  my_include/
+)
 ```
 
 ---
 
-## 烧录命令
+## 六、烧录
 
-### 检查调试器连接
+### 检查调试器
 
 ```bash
 pyocd list --probes
 ```
 
-预期看到 DAP-Link 设备。
-
-### 烧录固件
+### 烧录
 
 ```bash
-cd F:/cube2_c552/led_cmake
-pyocd flash -t STM32C552CET6 build/debug_GCC_STM32C552CET6/led.elf
+pyocd flash -t <芯片型号> build/<配置名>/<工程名>.elf
 ```
 
-参数说明：
-- `-t STM32C552CET6`: 目标芯片型号，pyOCD 会自动匹配 CMSIS-Pack 中的 flash 算法
-- 最后一个参数: 要烧录的 .elf 文件
+### 复位
 
-预期输出：
+```bash
+pyocd reset -t <芯片型号>          # 软件复位
+pyocd reset -t <芯片型号> -m hw    # 硬件复位
 ```
-Erased N bytes, programmed N bytes at X.XX kB/s
+
+### 擦除
+
+```bash
+pyocd erase -t <芯片型号> --mass   # 全片擦除
+pyocd erase -t <芯片型号> --chip   # 芯片擦除
+```
+
+### pyOCD 命令速查
+
+| 命令 | 用途 |
+|------|------|
+| `pyocd flash` | 烧录固件 |
+| `pyocd erase` | 擦除 Flash |
+| `pyocd reset` | 复位芯片 |
+| `pyocd gdbserver` | 启动 GDB Server（端口 3333） |
+| `pyocd commander` | 交互式调试（读写寄存器、内存） |
+| `pyocd rtt` | RTT 日志查看器 |
+| `pyocd run` | 烧录并立即运行 |
+| `pyocd list --probes` | 列出已连接的调试器 |
+| `pyocd list --targets` | 列出支持的芯片 |
+| `pyocd pack` | CMSIS-Pack 管理（查找/安装/更新） |
+
+---
+
+## 七、RTT 日志（免 UART 的 printf）
+
+### 原理
+
+```
+MCU: SEGGER_RTT_printf("Hello")
+        ↓ 写 RAM 环形缓冲区
+   调试器通过 SWD 读取
+        ↓
+PC:   pyocd rtt 实时显示
+```
+
+不需要 UART 引脚，调试器同时搞定烧录 + 调试 + 日志。
+
+### 集成步骤
+
+1. 将 SEGGER RTT 源文件加入工程（`SEGGER_RTT.h`、`SEGGER_RTT.c`、`SEGGER_RTT_Conf.h`）
+2. CMakeLists.txt 中注册：
+
+```cmake
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+  rtt/SEGGER_RTT.c
+)
+```
+
+3. 代码中使用：
+
+```c
+#include "rtt/SEGGER_RTT.h"
+
+SEGGER_RTT_printf(0, "SystemCoreClock = %u Hz\n", SystemCoreClock);
+SEGGER_RTT_printf(0, "Count: %u\n", count);
+```
+
+4. 查看日志：
+
+```bash
+pyocd rtt -t <芯片型号>
+```
+
+### API
+
+| 函数 | 说明 |
+|------|------|
+| `SEGGER_RTT_printf(0, fmt, ...)` | 格式化输出，最常用 |
+| `SEGGER_RTT_WriteString(0, s)` | 输出字符串，比 printf 快 |
+| `SEGGER_RTT_Write(0, data, len)` | 输出原始字节 |
+
+### 缓冲区配置
+
+```c
+#define BUFFER_SIZE_UP   (1024)  // MCU → PC，高速输出时加大
+#define BUFFER_SIZE_DOWN (64)    // PC → MCU
 ```
 
 ---
 
-## 完整流程
+## 八、GDB 调试
+
+### 启动 GDB Server
 
 ```bash
-# 0. 进入项目目录
-cd F:/cube2_c552/led_cmake
+pyocd gdbserver -t <芯片型号>
+# 监听 3333 端口
+```
 
+### 命令行 GDB
+
+```bash
+arm-none-eabi-gdb build/<配置名>/<工程名>.elf
+(gdb) target remote :3333
+(gdb) monitor reset
+(gdb) continue
+```
+
+### VS Code（`.vscode/launch.json`）
+
+```json
+{
+    "name": "STM32 Debug",
+    "type": "cppdbg",
+    "request": "launch",
+    "cwd": "${workspaceFolder}",
+    "program": "${workspaceFolder}/build/<配置名>/<工程名>.elf",
+    "miDebuggerPath": "arm-none-eabi-gdb",
+    "miDebuggerServerAddress": "localhost:3333",
+    "MIMode": "gdb",
+    "stopAtEntry": true
+}
+```
+
+---
+
+## 九、完整流程
+
+```bash
 # 1. 配置
-cmake --preset debug_GCC_STM32C552CET6
+cmake --preset debug_GCC_<芯片型号>
 
 # 2. 编译
-cmake --build --preset debug_GCC_STM32C552CET6
+cmake --build --preset debug_GCC_<芯片型号>
 
 # 3. 烧录
+pyocd flash -t <芯片型号> build/<配置名>/<工程名>.elf
+
+# 4. 复位
+pyocd reset -t <芯片型号>
+
+# 5. 查看 RTT 日志（可选）
+pyocd rtt -t <芯片型号>
+```
+
+### CubeMX2 修改配置后重新生成
+
+1. CubeMX2 打开 `.ioc2` 文件
+2. 修改 Pinout / Clock / Peripherals 配置
+3. 点击 Generate
+4. `generated/` 被刷新，根目录和 `user_modifiable/` 保持不变
+
+---
+
+## 十、完整示例：STM32C552CET6 LED 闪烁
+
+以下以 STM32C552CET6 为例，演示从 CubeMX2 创建工程到烧录运行的完整过程。
+
+### 10.1 创建工程（CubeMX2）
+
+1. 打开 CubeMX2 → 点击 **MCU** → 搜索 `STM32C552CET6`
+2. 工程名填 `led_cmake`，选择保存路径
+3. 点击 **Automatically Download, Install & Create Project**
+
+### 10.2 配置 Pinout
+
+在 Pinout 视图中：
+1. 找到 **PC13** 引脚 → 单击 → 选择 **GPIO Output**
+2. 右键 PC13 → 输入用户标签 `LED_PIN`
+3. 左侧 **System Core** → **GPIO** → 确认 PC13 配置为 Output Push Pull
+
+### 10.3 配置时钟
+
+在 Clock 视图中：
+1. 选择 **HSE** 作为 PSI 参考源
+2. PSI Output 设为目标频率（如 100MHz 起步验证，稳定后改 144MHz）
+3. 确认 Flash Latency 自动匹配目标频率
+4. 点击 **Resolve Clock Issues** 让工具自动求解
+
+时钟路径：
+```
+HSE (8MHz) → PSI (HSE, 8MHz ref) → PSIS 100MHz → SYSCLK
+                                              ├── HCLK  ÷1 = 100MHz
+                                              ├── PCLK1 ÷1 = 100MHz
+                                              ├── PCLK2 ÷1 = 100MHz
+                                              └── PCLK3 ÷1 = 100MHz
+```
+
+### 10.4 Project Settings
+
+1. 左侧 → **Project settings**
+2. 选择 **CMake** 格式
+3. 确认 Advanced Settings 中冲突处理规则
+
+### 10.5 生成代码
+
+点击左下角黄色 **Generate** 按钮。
+
+生成的工程结构：
+```
+led_cmake/
+├── CMakeLists.txt
+├── CMakePresets.json
+├── main.c / main.h
+├── cmake/
+│   ├── GCC.14.3.1.cmake
+│   ├── target.cmake         # CMSIS_Dclock = 144000000
+│   ├── files.cmake
+│   ├── flags.cmake
+│   └── components.cmake
+├── generated/hal/
+│   ├── mx_system.c           # 系统初始化
+│   ├── mx_rcc.c              # 时钟 → PSI 100MHz / 4WS
+│   ├── mx_gpio_default.c     # PC13 → Output PP
+│   └── mx_gpio_default.h     # LED_PORT = GPIOC, LED_PIN = PIN_13
+├── stm32c5xx_drivers/
+├── stm32c5xx_dfp/
+├── user_modifiable/
+│   └── Device/STM32C552CET6/
+│       ├── startup_stm32c552xx.c
+│       └── system_stm32c5xx.c
+└── utilities/
+```
+
+### 10.6 集成 RTT（一次性操作）
+
+创建 `rtt/` 目录，放入 SEGGER_RTT 源文件，编辑 `CMakeLists.txt`：
+
+```cmake
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+  rtt/SEGGER_RTT.c
+)
+```
+
+### 10.7 编写 main.c
+
+```c
+#include "main.h"
+#include "mx_gpio_default.h"
+#include "rtt/SEGGER_RTT.h"
+
+int main(void)
+{
+    if (mx_system_init() != SYSTEM_OK)
+        return -1;
+
+    SEGGER_RTT_printf(0, "System init OK, LED blinking on PC13...\n");
+
+    uint32_t count = 0;
+    while (1) {
+        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
+        SEGGER_RTT_printf(0, "LED toggle #%u\n", ++count);
+        HAL_Delay(500);
+    }
+}
+```
+
+### 10.8 编译
+
+```bash
+cd led_cmake
+cmake --preset debug_GCC_STM32C552CET6
+cmake --build --preset debug_GCC_STM32C552CET6
+```
+
+输出：
+```
+[21/21] Linking C executable led.elf
+```
+
+### 10.9 烧录
+
+```bash
+# 确认调试器
+pyocd list --probes
+
+# 烧录
 pyocd flash -t STM32C552CET6 build/debug_GCC_STM32C552CET6/led.elf
 ```
 
----
-
-## 验证
-
-1. 插上 DAP-Link，连接开发板
-2. 执行 `pyocd list --probes`，确认调试器被识别
-3. 执行完整流程（配置 → 编译 → 烧录）
-4. 观察开发板上的 PC13 LED 是否按预期闪烁
-
----
-
-## 常见问题
-
-### HSE HAL 函数编译报错
-
+输出：
 ```
-error: implicit declaration of function 'HAL_RCC_HSE_Enable'
+Erased 8192 bytes (1 sector), programmed 8192 bytes (1 page) at X.XX kB/s
 ```
 
-**原因**: `HSE_VALUE` 宏未定义。`stm32_external_env.h` 模板文件不在编译器 include path 中。
-
-**解决**: 使用 LL API 替代 HAL API：
-```c
-LL_RCC_HSE_Enable();          // 替代 HAL_RCC_HSE_Enable(HAL_RCC_HSE_ON)
-while (!LL_RCC_HSE_IsReady()); // 等待就绪
-```
-
-### 100MHz 正常，144MHz 不工作
-
-**原因**: Flash 等待周期不够。
-
-```
-100MHz + 4WS: (1+4) × 10ns = 50ns ✓
-144MHz + 4WS: (1+4) × 6.94ns = 34.7ns ✗ 取指令超时
-144MHz + 5WS: (1+5) × 6.94ns = 41.7ns ✓
-```
-
-**解决**: 升频时同步加大 Flash 等待周期：
-```c
-HAL_FLASH_ITF_SetLatency(HAL_FLASH, HAL_FLASH_ITF_LATENCY_5);
-```
-
-### DAP-Link 未识别
+### 10.10 验证
 
 ```bash
-pyocd list --probes
-# No available debug probes are connected
+# 复位运行
+pyocd reset -t STM32C552CET6
+
+# 查看 RTT 输出
+pyocd rtt -t STM32C552CET6
 ```
 
-- 检查 USB 数据线连接
-- 检查 DAP-Link 指示灯
-- 检查 Windows 设备管理器是否识别 CMSIS-DAP 设备
+RTT 终端输出：
+```
+System init OK, LED blinking on PC13...
+LED toggle #1
+LED toggle #2
+LED toggle #3
+...
+```
+
+板载 PC13 LED 以 1Hz 频率闪烁（500ms 亮 / 500ms 灭）。
+
+### 10.11 关键文件索引
+
+| 文件 | 作用 | 是否可改 |
+|------|------|---------|
+| `led.ioc2` | CubeMX2 工程文件，所有配置的源 | CubeMX2 中改 |
+| `main.c` | 用户代码 | ✅ 随意改 |
+| `CMakeLists.txt` | 添加新源文件的入口 | ✅ 在插槽处改 |
+| `generated/hal/mx_rcc.c` | 时钟配置 | ⚠️ 可手动改，但重新生成会覆盖 |
+| `generated/hal/mx_gpio_default.c` | GPIO 初始化 | ⚠️ 同上 |
+| `generated/hal/mx_system.c` | 系统初始化调用链 | ⚠️ 同上 |
+| `user_modifiable/` 下文件 | 启动、链接脚本 | ✅ 可改 |
+| `rtt/` | RTT 源码 | ✅ 一次性添加 |
+| `build/` | 编译产物 | 不需要动 |
