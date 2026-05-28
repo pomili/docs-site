@@ -1,0 +1,641 @@
+---
+sidebar_position: 7
+title: ESP32 BLE 配网从零搭建
+description: 不靠 App，用手机 nRF Connect 给 ESP32 配网，手把手写代码
+---
+
+# ESP32 BLE 配网从零搭建
+
+> 作者按：上篇写了 Web 配网，有朋友问 BLE 怎么做。Web 配网最大的问题是用户得连热点、手动开浏览器，而 BLE 配网只需要打开 App 点几下就行了。  
+> 这篇把 BLE 配网从底层逻辑到完整代码讲清楚。
+
+---
+
+## 为什么要用 BLE 配网？
+
+Web 配网和 BLE 配网各有各的适用场景：
+
+| 场景 | Web 配网 | BLE 配网 |
+|------|----------|----------|
+| 用户设备 | 任何有浏览器的设备 | 需要支持 BLE 的手机 |
+| 操作步骤 | 连热点 → 开浏览器 → 填信息 | 打开 App → 点连接 → 发送 |
+| 体验流畅度 | 一般（要切换 WiFi） | 好（不用切网） |
+| 实现复杂度 | 简单（纯 Web） | 中等（BLE GATT） |
+| 调试难度 | 低（浏览器看页面） | 中等（要看 BLE 日志） |
+| 交互能力 | 强（可以做漂亮页面） | 弱（靠数据结构） |
+
+一句话结论：**给不懂技术的人用，BLE 更省心**。不用教他们"连上那个热点然后打开浏览器"。
+
+---
+
+## BLE 配网的核心思路
+
+ESP32 作为 BLE Peripheral（从机），广播自己的服务。手机连上来之后，通过读写几个特征值（Characteristic）来完成配网：
+
+```
+手机 ←→ ESP32 (BLE GATT 服务器)
+         │
+         ├── [Service] Provisioning Service
+         │     ├── Characteristic: SSID （手机写）
+         │     ├── Characteristic: Password （手机写）
+         │     ├── Characteristic: Token （手机写，触发配网）
+         │     └── Characteristic: Status （ESP32 通知，配网结果）
+         │
+         └── 配网成功 → 保存到 NVS → 重启
+```
+
+整个交互流程：
+
+```
+1. ESP32 开机 → 发现没存 WiFi → 广播 BLE
+2. 手机扫码/搜索 → 连接
+3. 手机往 SSID 特征写 "MyWiFi"
+4. 手机往 Password 特征写 "password123"
+5. 手机往 Token 特征写 "go"
+6. ESP32 收到 Token → 保存到 NVS → 通知 Status "OK" → 重启
+7. ESP32 重启后连上 WiFi
+```
+
+---
+
+## 完整代码
+
+同样，所有代码都在一个文件里，`main/ble_prov.c`，大约 400 行。
+
+### 头文件和配置
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/event_groups.h>
+#include <esp_system.h>
+#include <esp_log.h>
+#include <esp_err.h>
+#include <nvs_flash.h>
+#include <nvs.h>
+
+#include <esp_bt.h>
+#include <esp_bt_main.h>
+#include <esp_gap_ble_api.h>
+#include <esp_gatts_api.h>
+#include <esp_bt_defs.h>
+#include <esp_wifi.h>
+#include <esp_event.h>
+
+#define DEVICE_NAME             "ESP32-BLE-Config"
+#define PROV_SERVICE_UUID       0x00FF
+#define SSID_CHAR_UUID          0xFF01
+#define PASSWORD_CHAR_UUID      0xFF02
+#define TOKEN_CHAR_UUID         0xFF03
+#define STATUS_CHAR_UUID        0xFF04
+
+#define NVS_NAMESPACE           "wifi_config"
+#define NVS_KEY_SSID            "ssid"
+#define NVS_KEY_PASSWORD        "password"
+```
+
+这里我选了自定义的 16-bit UUID（0x00FF 系列），实际项目建议用 128-bit UUID 避免跟别的设备冲突。
+
+### NVS 读写
+
+```c
+static char g_saved_ssid[32] = {0};
+static char g_saved_password[64] = {0};
+
+static esp_err_t load_creds(void)
+{
+    nvs_handle_t nvs;
+    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs);
+    if (err != ESP_OK) return err;
+    size_t len = sizeof(g_saved_ssid);
+    err = nvs_get_str(nvs, NVS_KEY_SSID, g_saved_ssid, &len);
+    if (err != ESP_OK) { nvs_close(nvs); return err; }
+    len = sizeof(g_saved_password);
+    err = nvs_get_str(nvs, NVS_KEY_PASSWORD, g_saved_password, &len);
+    nvs_close(nvs);
+    return err;
+}
+
+static esp_err_t save_creds(const char *ssid, const char *password)
+{
+    nvs_handle_t nvs;
+    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs);
+    if (err != ESP_OK) return err;
+    nvs_set_str(nvs, NVS_KEY_SSID, ssid);
+    nvs_set_str(nvs, NVS_KEY_PASSWORD, password);
+    err = nvs_commit(nvs);
+    nvs_close(nvs);
+    return err;
+}
+
+static void clear_creds(void)
+{
+    nvs_handle_t nvs;
+    if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs) == ESP_OK) {
+        nvs_erase_all(nvs); nvs_commit(nvs); nvs_close(nvs);
+    }
+}
+```
+
+跟 Web 配网那套完全一样的 NVS 接口，甚至命名空间都一样。这样你可以在两种方案之间切换，烧录哪个版本都能读到同一个 NVS 区域。
+
+### BLE GATT 定义
+
+```c
+// 声明我们的 GATT 服务
+static const uint16_t primary_service_uuid = ESP_GATT_UUID_PRI_SERVICE;
+static const uint16_t char_decl_uuid       = ESP_GATT_UUID_CHAR_DECLARE;
+static const uint16_t char_client_cfg_uuid = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
+static const uint8_t char_prop_read_write  = ESP_GATT_CHAR_PROP_BIT_READ |
+                                              ESP_GATT_CHAR_PROP_BIT_WRITE;
+static const uint8_t char_prop_read_notify = ESP_GATT_CHAR_PROP_BIT_READ |
+                                              ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+
+// 服务的完整定义（GATT 数据库）
+static const uint8_t prov_service_uuid[2] = {
+    PROV_SERVICE_UUID & 0xFF, (PROV_SERVICE_UUID >> 8) & 0xFF
+};
+static const uint8_t ssid_char_uuid[2] = {
+    SSID_CHAR_UUID & 0xFF, (SSID_CHAR_UUID >> 8) & 0xFF
+};
+static const uint8_t pass_char_uuid[2] = {
+    PASSWORD_CHAR_UUID & 0xFF, (PASSWORD_CHAR_UUID >> 8) & 0xFF
+};
+static const uint8_t token_char_uuid[2] = {
+    TOKEN_CHAR_UUID & 0xFF, (TOKEN_CHAR_UUID >> 8) & 0xFF
+};
+static const uint8_t status_char_uuid[2] = {
+    STATUS_CHAR_UUID & 0xFF, (STATUS_CHAR_UUID >> 8) & 0xFF
+};
+```
+
+### GATT 数据库配置表
+
+这里稍微有点绕，ESP-IDF 的 BLE 用一张表来定义服务和特征值：
+
+```c
+enum {
+    IDX_SVC,
+    IDX_SSID_CHAR, IDX_SSID_VAL,
+    IDX_PASS_CHAR, IDX_PASS_VAL,
+    IDX_TOKEN_CHAR, IDX_TOKEN_VAL,
+    IDX_STATUS_CHAR, IDX_STATUS_VAL, IDX_STATUS_CFG,
+    IDX_NB,
+};
+
+static const esp_gatts_attr_db_t gatt_db[IDX_NB] = {
+    // Service Declaration
+    [IDX_SVC] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&primary_service_uuid,
+            .perm = ESP_GATT_PERM_READ,
+            .max_length = sizeof(prov_service_uuid),
+            .length = sizeof(prov_service_uuid),
+            .value = prov_service_uuid,
+        },
+    },
+    // SSID Characteristic Declaration
+    [IDX_SSID_CHAR] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&char_decl_uuid,
+            .perm = ESP_GATT_PERM_READ,
+            .max_length = sizeof(uint8_t),
+            .length = sizeof(uint8_t),
+            .value = (uint8_t *)&char_prop_read_write,
+        },
+    },
+    // SSID Value
+    [IDX_SSID_VAL] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&ssid_char_uuid,
+            .perm = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+            .max_length = 32,
+            .length = 0,
+            .value = NULL,
+        },
+    },
+    // Password Characteristic Declaration
+    [IDX_PASS_CHAR] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&char_decl_uuid,
+            .perm = ESP_GATT_PERM_READ,
+            .max_length = sizeof(uint8_t),
+            .length = sizeof(uint8_t),
+            .value = (uint8_t *)&char_prop_read_write,
+        },
+    },
+    // Password Value
+    [IDX_PASS_VAL] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&pass_char_uuid,
+            .perm = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+            .max_length = 64,
+            .length = 0,
+            .value = NULL,
+        },
+    },
+    // Token Characteristic Declaration
+    [IDX_TOKEN_CHAR] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&char_decl_uuid,
+            .perm = ESP_GATT_PERM_READ,
+            .max_length = sizeof(uint8_t),
+            .length = sizeof(uint8_t),
+            .value = (uint8_t *)&char_prop_read_write,
+        },
+    },
+    // Token Value
+    [IDX_TOKEN_VAL] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&token_char_uuid,
+            .perm = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+            .max_length = 4,
+            .length = 0,
+            .value = NULL,
+        },
+    },
+    // Status Characteristic Declaration
+    [IDX_STATUS_CHAR] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&char_decl_uuid,
+            .perm = ESP_GATT_PERM_READ,
+            .max_length = sizeof(uint8_t),
+            .length = sizeof(uint8_t),
+            .value = (uint8_t *)&char_prop_read_notify,
+        },
+    },
+    // Status Value
+    [IDX_STATUS_VAL] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&status_char_uuid,
+            .perm = ESP_GATT_PERM_READ,
+            .max_length = 8,
+            .length = 0,
+            .value = NULL,
+        },
+    },
+    // Status Client Config (CCC, 用于通知)
+    [IDX_STATUS_CFG] = {
+        .attr_control = {.auto_rsp = ESP_GATT_AUTO_RSP},
+        .att_desc = {
+            .uuid_length = ESP_UUID_LEN_16,
+            .uuid_p = (uint8_t *)&char_client_cfg_uuid,
+            .perm = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+            .max_length = sizeof(uint16_t),
+            .length = sizeof(uint16_t),
+            .value = NULL,
+        },
+    },
+};
+```
+
+这个数据库表是 BLE 配网里最劝退的部分。简单说就是定义了两层结构：
+
+- Service（服务）→ 包含多个 Characteristic（特征）
+- 每个 Characteristic 有：声明（告诉手机这是个啥） + 值（真正的数据）
+
+你要配四个特征：SSID、密码、触发令牌、状态通知。
+
+### GATT 事件处理
+
+这是 BLE 里真正干活的部分：
+
+```c
+static uint8_t s_ssid_buf[32] = {0};
+static uint8_t s_pass_buf[64] = {0};
+static uint16_t s_status_handle = 0;
+static uint16_t s_status_ccc_handle = 0;
+static uint8_t s_status_val[8] = "WAITING";
+
+static void gatts_event_handler(esp_gatts_cb_event_t event,
+                                 esp_gatt_if_t gatts_if,
+                                 esp_ble_gatts_cb_param_t *param)
+{
+    switch (event) {
+    case ESP_GATTS_REG_EVT:
+        // 注册成功，创建服务
+        esp_ble_gatts_create_attr_tab(gatt_db, gatts_if, IDX_NB, SVC_INST_ID);
+        break;
+
+    case ESP_GATTS_CREAT_ATTR_TAB_EVT: {
+        // 服务表创建成功，启动服务
+        if (param->add_attr_tab.status == ESP_OK) {
+            uint16_t handles[IDX_NB];
+            memcpy(handles, param->add_attr_tab.handles, sizeof(handles));
+            s_status_handle = handles[IDX_STATUS_VAL];
+            s_status_ccc_handle = handles[IDX_STATUS_CFG];
+            esp_ble_gatts_start_service(handles[IDX_SVC]);
+        }
+        break;
+    }
+
+    case ESP_GATTS_START_EVT:
+        // 服务启动成功，开始广播
+        if (param->start.status == ESP_OK) {
+            esp_ble_adv_params_t adv_params = {
+                .adv_int_min        = 0x100,
+                .adv_int_max        = 0x100,
+                .adv_type           = ADV_TYPE_IND,
+                .channel_map        = ADV_CHNL_ALL,
+                .own_addr_type      = BLE_ADDR_TYPE_PUBLIC,
+                .peer_addr_type     = BLE_ADDR_TYPE_PUBLIC,
+                .filter_policy      = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
+            };
+            esp_ble_gap_config_adv_data_raw((uint8_t *)&adv_data,
+                                             sizeof(adv_data));
+            esp_ble_gap_start_advertising(&adv_params);
+            ESP_LOGI(TAG, "BLE 广播中...");
+        }
+        break;
+
+    case ESP_GATTS_WRITE_EVT: {
+        // 手机写数据到这里
+        uint16_t handle = param->write.handle;
+        uint16_t len = param->write.len;
+
+        if (handle == handles[IDX_SSID_VAL]) {
+            memcpy(s_ssid_buf, param->write.value,
+                   len > 31 ? 31 : len);
+            s_ssid_buf[len > 31 ? 31 : len] = '\0';
+            ESP_LOGI(TAG, "收到 SSID: %s", s_ssid_buf);
+        }
+        else if (handle == handles[IDX_PASS_VAL]) {
+            memcpy(s_pass_buf, param->write.value,
+                   len > 63 ? 63 : len);
+            s_pass_buf[len > 63 ? 63 : len] = '\0';
+            ESP_LOGI(TAG, "收到 Password: ****");
+        }
+        else if (handle == handles[IDX_TOKEN_VAL]) {
+            // 收到触发令牌，开始配网
+            ESP_LOGI(TAG, "收到触发令牌，保存并重启...");
+            save_creds((const char *)s_ssid_buf,
+                       (const char *)s_pass_buf);
+
+            // 更新状态并通知手机
+            strcpy((char *)s_status_val, "OK");
+            esp_ble_gatts_send_indicate(gatts_if, 0,
+                s_status_handle, 2, s_status_val, false);
+
+            vTaskDelay(pdMS_TO_TICKS(500));
+            esp_restart();
+        }
+        else if (handle == s_status_ccc_handle) {
+            // 手机订阅/取消通知
+        }
+        break;
+    }
+
+    case ESP_GATTS_READ_EVT: {
+        // 手机读数据
+        uint16_t handle = param->read.handle;
+        if (handle == handles[IDX_STATUS_VAL]) {
+            esp_ble_gatts_set_attr_value(handle, strlen((char *)s_status_val),
+                                          s_status_val);
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
+}
+```
+
+`handles` 数组的问题需要注意一下——`CREAT_ATTR_TAB_EVT` 返回的 handles 是按 `IDX_*` 顺序给的，所以可以按 `handles[IDX_SSID_VAL]` 这种方式取。但这个数组的作用域只在 `CREAT_ATTR_TAB_EVT` 里，所以需要把要用的 handle 存到全局变量里，比如 `s_status_handle`。
+
+### 广播数据配置
+
+```c
+// 广播包：包含设备名和服务 UUID
+static uint8_t adv_data[31] = {
+    0x02, 0x01, 0x06,                     // Flags: LE General Discoverable
+    0x03, 0x03,                           // Complete List of 16-bit UUIDs
+    PROV_SERVICE_UUID & 0xFF,
+    (PROV_SERVICE_UUID >> 8) & 0xFF,
+    0x0F, 0x09,                           // Complete Local Name
+    'E', 'S', 'P', '3', '2', '-',
+    'B', 'L', 'E', '-', 'C', 'o', 'n',
+    'f', 'i', 'g',                        // 剩余填充 0
+};
+
+// 扫描响应包（可选，用来多放点信息）
+static uint8_t scan_rsp_data[31] = {
+    0x05, 0x24,                           // TX Power Level
+    0x00,                                 // 0dBm
+    0x09, 0xFF,                           // Manufacturer Specific Data
+    'B', 'L', 'E', 'P', 'r', 'o', 'v',    // 自定义标识
+};
+```
+
+广播包总共只有 31 字节，很挤。你要在设备名长度、服务 UUID 数量之间做取舍。`ESP32-BLE-Config` 有 16 个字符，加上其他字段，勉强塞得下。
+
+### WiFi STA 连接
+
+```c
+static void sta_evt_handler(void *arg, esp_event_base_t base,
+                              int32_t id, void *data)
+{
+    if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
+        ESP_LOGI(TAG, "断开了，重试...");
+        esp_wifi_connect();
+    } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t *e = (ip_event_got_ip_t *)data;
+        ESP_LOGI(TAG, "连上了！IP: " IPSTR, IP2STR(&e->ip_info.ip));
+    }
+}
+
+static void wifi_sta_connect(const char *ssid, const char *password)
+{
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_sta();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
+                                &sta_evt_handler, NULL);
+    esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP,
+                                &sta_evt_handler, NULL);
+
+    wifi_config_t wc = {
+        .sta = { .threshold.authmode = WIFI_AUTH_WPA2_PSK },
+    };
+    strncpy((char *)wc.sta.ssid, ssid, sizeof(wc.sta.ssid));
+    strncpy((char *)wc.sta.password, password, sizeof(wc.sta.password));
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+```
+
+这边的 STA 连接和 Web 配网版本基本一样，区别是这里没做阻塞等待——BLE 配网成功后直接重启，所以不需要超时重试逻辑，连上就连上，连不上手机再写一次就行。
+
+### main 入口
+
+```c
+void app_main(void)
+{
+    // 1. NVS 初始化
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
+        ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        nvs_flash_erase();
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    // 2. 检查有没有存过的 WiFi
+    if (load_creds() == ESP_OK && strlen(g_saved_ssid) > 0) {
+        ESP_LOGI(TAG, "有已保存的 WiFi，直接连接: %s", g_saved_ssid);
+        wifi_sta_connect(g_saved_ssid, g_saved_password);
+        return;
+    }
+
+    // 3. 没有凭证 → 启动 BLE 配网
+    ESP_LOGI(TAG, "未配置 WiFi，启动 BLE 配网...");
+
+    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+    esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    esp_bt_controller_init(&bt_cfg);
+    esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+    esp_bluedroid_init();
+    esp_bluedroid_enable();
+
+    // 注册 GATT 回调
+    esp_ble_gatts_register_callback(gatts_event_handler);
+    esp_ble_gap_register_callback(gap_event_handler);
+    esp_ble_gatts_app_register(0);
+
+    ESP_LOGI(TAG, "BLE 配网已启动，设备名: %s", DEVICE_NAME);
+}
+```
+
+这个 main 函数你发现了没？它比 Web 配网版本短很多，因为 BLE 的大部分逻辑都在事件回调里。
+
+还有一点：`esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT)` 这行是释放经典蓝牙的内存，因为 ESP32 的 BT 内存是固定的，你只用 BLE 的话就释放掉经典蓝牙那部分。
+
+---
+
+## CMakeLists.txt
+
+```cmake
+idf_component_register(SRCS "ble_prov.c"
+                    INCLUDE_DIRS "."
+                    REQUIRES nvs_flash esp_wifi esp_netif esp_event
+                             bt)
+```
+
+注意 `REQUIRES` 里多了个 `bt`，这是 BLE 的组件。另外在 sdkconfig 里要开启 BLE：
+
+```kconfig
+CONFIG_BT_ENABLED=y
+CONFIG_BTDM_CONTROLLER_MODE_BTDM=y
+CONFIG_BTDM_CONTROLLER_BLE_MAX_CONN=1
+CONFIG_BLE_MESH_SCAN_DUPLICATE_ENABLE=n
+```
+
+---
+
+## 编译和烧录
+
+跟 Web 配网一样：
+
+```powershell
+& $python $idf_py set-target esp32s3
+& $python $idf_py build
+& $python -m esptool --chip esp32s3 -p COM19 -b 460800 `
+  write_flash --flash_mode dio --flash_size 2MB --flash_freq 80m `
+  0x0 build/bootloader/bootloader.bin `
+  0x8000 build/partition_table/partition-table.bin `
+  0x10000 build/ble_prov.bin
+```
+
+烧完重启，用手机打开 nRF Connect 或者 LightBlue，搜索 `ESP32-BLE-Config`。
+
+---
+
+## 手机端操作步骤
+
+以 nRF Connect 为例：
+
+```
+1. 打开 nRF Connect
+2. 扫描 → 找到 ESP32-BLE-Config → 点 Connect
+3. 找到 Unknown Service (0x00FF)
+4. 点开看特征值：
+   ├── SSID (0xFF01)    → 点 Write → 输入你家 WiFi 名字 → Send
+   ├── Password (0xFF02) → 点 Write → 输入 WiFi 密码 → Send
+   ├── Token (0xFF03)   → 点 Write → 输入 "go" → Send
+   └── Status (0xFF04)  → 点 Enable Notifications
+5. ESP32 返回 Status="OK" 然后重启
+6. 等几秒，ESP32 就连上你家 WiFi 了
+```
+
+手机上没有 nRF Connect？LightBlue、BLE Scanner 也行，操作逻辑一样。
+
+---
+
+## 和 Web 配网对比
+
+| 维度 | Web 配网 | BLE 配网 |
+|------|----------|----------|
+| 代码量 | ~500 行 | ~400 行 |
+| 用户操作 | 切 WiFi + 开浏览器 | 开 App + 写三次 |
+| 交互界面 | HTML 页面，漂亮 | BLE 特征值，简陋 |
+| 需要额外 App | 不需要 | 需要 BLE Scanner |
+| 适用人群 | 啥设备都行 | 得有智能手机 |
+| 成功率 | 高（HTTP 稳定） | 高（BLE 稳定） |
+| 扩展性 | 容易加新功能 | 加功能要加特征值 |
+
+---
+
+## 可以怎么改进
+
+这套 BLE 配网虽然能用，但体验上还有不少提升空间：
+
+1. **用 128-bit UUID** — 16-bit 的 0x00FF 可能跟别的设备冲突，建议换成自己生成的 UUID
+2. **广播数据优化** — 21 字节只够塞设备名。想多传点信息可以用 scan response
+3. **安全考虑** — 现在是明文传密码，想安全可以加个简单的 XOR 加密或者配对绑定
+4. **一键配网** — 把 SSID、Password、Token 合并在一次写入里，少点几次屏幕
+5. **超时自动关闭 BLE** — 5 分钟没人连就关掉 BLE 省电
+6. **配网成功通知** — 现在只返回 "OK"，可以返回 IP 地址或者连接状态
+7. **微信小程序** — 微信原生支持 BLE，可以写个小程序代替 nRF Connect
+
+---
+
+## 踩坑记录
+
+同样记几个实际遇到的问题：
+
+- **BT 内存分配** — `esp_bt_controller_mem_release` 必须在 init 之前调，否则经典蓝牙占了 BLE 的内存就报错
+- **GATT 表索引乱了** — `IDX_*` 枚举的顺序必须和 `gatt_db` 数组的顺序一致，多一个少一个都不行
+- **notify 没反应** — 检查是不是忘了加 `IDX_STATUS_CFG`（Client Characteristic Configuration），不订阅是收不到通知的
+- **handle 作用域** — `CREAT_ATTR_TAB_EVT` 里的 handles 只在当前事件有效，要用的存全局
+- **广播数据超 31 字节** — 设备名长了就塞不下，可以用 scan response 多带点数据
+- **ESP32-C3/S3 的 BLE** — C3 和 S3 的 BLE 跟普通 ESP32 略有区别，主要是 controller 初始化的参数不一样
+- **手机连不上** — 先试 nRF Connect，它能连就是你写的 App 有问题。nRF Connect 都连不上就检查广播配置
