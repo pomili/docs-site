@@ -1,229 +1,703 @@
 ---
 sidebar_position: 6
-title: ESP32-S3 网页配网
-description: ESP32-S3 Web Provisioning - 基于 ESP-IDF 的 Web 配网方案
+title: ESP32 网页配网从零搭建
+description: 自己动手写一个 ESP32 的 Web 配网方案，不依赖 IDF 的 provisioing 组件
 ---
 
-# ESP32-S3 网页配网（Web Provisioning）
+# ESP32 网页配网从零搭建
 
-> 基于 ESP32-S3 + ESP-IDF v5.3 实现的 Web 配网方案  
-> 项目路径：`F:\espidf_openclaw\web_prov\web_prov`
-
----
-
-## 一、功能概述
-
-设备启动后自动判断：
-
-1. **有已保存的 WiFi 凭证** → 尝试连接 STA
-2. **连接成功** → 正常运行
-3. **无凭证 / 连接失败** → 启动 AP 模式 + Web 配网门户
-
-配网门户特点：
-
-- 📡 自动扫描附近 WiFi 信号
-- 🎯 点击选择网络，只需填密码
-- 🔄 提交后自动保存并重启
-- 🚪 Captive Portal（DNS 劫持）
+> 作者按：网上关于 ESP32 配网的教程不少，但大多直接调 IDF 的 `wifi_provisioning` 组件，封装得太死，想改点东西很费劲。  
+> 这篇文章从头写一个 Web 配网方案，所有代码都贴出来，想怎么改都行。
 
 ---
 
-## 二、整体架构
+## 为什么要自己写配网？
+
+市面上现成的配网方案有几个：
+
+| 方案 | 优点 | 缺点 |
+|------|------|------|
+| ESP-IDF `wifi_provisioning` | 官方维护，功能全 | 依赖 protobuf，二进制交互，调试麻烦 |
+| SmartConfig / ESP-TOUCH | 操作简单 | 成功率看人品，路由器兼容性差 |
+| BLE 配网 | 体验好 | 得有蓝牙，还得写 App |
+| 自己做 Web 配网 | 全可控，Web 页面随心改 | 多写几行代码 |
+
+我选 Web 配网的原因很简单：**用户只要有浏览器就行**，不管是 iPhone 还是 Android，连上 ESP32 发的热点，打开网页点两下就完事。
+
+---
+
+## 整体思路
+
+设备上电后干两件事：
+
+1. 看看 NVS 里有没有存 WiFi 账号密码
+   - 有 → 试着连一下那个 WiFi
+   - 连上了 → 正常工作
+   - 连不上 → 擦掉旧的，进配网模式
+2. 没有存过 → 直接进配网模式
+
+配网模式就是：
 
 ```
-┌─────────────────────────────────────┐
-│          app_main()                 │
-├─────────────────────────────────────┤
-│ 1. NVS 初始化                       │
-│ 2. 读取已保存的 WiFi 凭证           │
-│ 3. 有凭证 → 尝试 STA 连接           │
-│ 4. 无凭证/失败 → AP + Web 门户     │
-└─────────────────────────────────────┘
-                    │
-         ┌─────────┴──────────┐
-         ▼                    ▼
-   ┌──────────┐        ┌──────────────┐
-   │ STA 模式 │        │   AP 模式    │
-   │ 正常使用 │        │ Web 服务器   │
-   └──────────┘        │ DNS 服务器   │
-                       │ WiFi 扫描    │
-                       │ NVS 保存     │
-                       └──────────────┘
+开一个 WiFi 热点（ESP32-Config）
+  ├── 启动 DNS 服务器（所有域名指到 192.168.4.1）
+  └── 启动 Web 服务器
+       ├── GET /       → 返回配网页
+       ├── GET /api/scan → 扫描附近 WiFi，返回 JSON 列表
+       └── POST /save  → 保存 WiFi 密码，重启
+```
+
+用户要做的事：
+
+```
+打开手机 WiFi → 连 ESP32-Config → 弹出/访问 192.168.4.1
+→ 点选你家 WiFi → 输密码 → 提交 → 等重启
 ```
 
 ---
 
-## 三、核心代码说明
+## 完整代码
 
-### 1. NVS 存储（`load_creds_from_nvs` / `save_creds_to_nvs`）
+整个项目就一个 `web_prov.c` 文件，500 行左右。我全部贴出来，每一段简单说下在干嘛。
 
-使用 NVS 命名空间 `wifi_config`，存储两个键：
-
-| 键        | 值         | 说明         |
-| --------- | ---------- | ------------ |
-| `ssid`    | 字符串     | WiFi 名称    |
-| `password` | 字符串    | WiFi 密码    |
-
-流程：
+### 头文件和配置
 
 ```c
-nvs_open("wifi_config", NVS_READWRITE, &nvs);
-nvs_set_str(nvs, "ssid", ssid);
-nvs_set_str(nvs, "password", password);
-nvs_commit(nvs);
-nvs_close(nvs);
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_system.h>
+#include <esp_wifi.h>
+#include <esp_event.h>
+#include <esp_log.h>
+#include <esp_err.h>
+#include <nvs_flash.h>
+#include <nvs.h>
+#include <lwip/err.h>
+#include <lwip/sys.h>
+#include <lwip/netdb.h>
+#include <lwip/dns.h>
+#include <lwip/sockets.h>
+#include <lwip/ip_addr.h>
+#include <esp_http_server.h>
+
+#define AP_SSID             "ESP32-Config"
+#define AP_PASSWORD         NULL
+#define AP_MAX_CONN         4
+
+#define NVS_NAMESPACE       "wifi_config"
+#define NVS_KEY_SSID        "ssid"
+#define NVS_KEY_PASSWORD    "password"
+
+static const char *TAG = "web_prov";
 ```
 
-### 2. WiFi 扫描（`/api/scan` 端点）
+说几个细节：
 
-在 AP 模式下切换到 `WIFI_MODE_APSTA` 执行扫描，返回 JSON：
+- `AP_PASSWORD` 我设的 NULL，也就是开放热点。想加密码直接改，比如 `"12345678"`
+- NVS 那个命名空间 `wifi_config` 注意别跟其他 NVS 数据冲突，不然 `nvs_erase_all` 会把你别的东西也清掉
 
-```json
+### NVS 读写
+
+```c
+static esp_err_t load_creds_from_nvs(void)
 {
-  "networks": [
-    {"ssid": "MyWiFi", "rssi": -45, "auth": "WPA2", "bar": 5},
-    {"ssid": "Guest", "rssi": -70, "auth": "OPEN", "bar": 3}
-  ]
+    nvs_handle_t nvs;
+    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs);
+    if (err != ESP_OK) return err;
+
+    static char saved_ssid[32], saved_password[64];
+    size_t len = sizeof(saved_ssid);
+    err = nvs_get_str(nvs, NVS_KEY_SSID, saved_ssid, &len);
+    if (err != ESP_OK) { nvs_close(nvs); return err; }
+
+    len = sizeof(saved_password);
+    err = nvs_get_str(nvs, NVS_KEY_PASSWORD, saved_password, &len);
+    nvs_close(nvs);
+    return err;
+}
+
+static esp_err_t save_creds_to_nvs(const char *ssid, const char *password)
+{
+    nvs_handle_t nvs;
+    esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs);
+    if (err != ESP_OK) return err;
+    nvs_set_str(nvs, NVS_KEY_SSID, ssid);
+    nvs_set_str(nvs, NVS_KEY_PASSWORD, password);
+    err = nvs_commit(nvs);
+    nvs_close(nvs);
+    return err;
+}
+
+static void clear_creds_from_nvs(void)
+{
+    nvs_handle_t nvs;
+    if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs) == ESP_OK) {
+        nvs_erase_all(nvs);
+        nvs_commit(nvs);
+        nvs_close(nvs);
+    }
 }
 ```
 
-关键代码：
+NVS 这东西看着简单，有个坑：写完要调 `nvs_commit`，不然断电就丢了。另外 `nvs_get_str` 的 len 参数既是输入也是输出——输入时告诉函数 buffer 大小，返回时告诉你实际长度。
+
+### WiFi 初始化和 AP 模式
 
 ```c
-ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
-wifi_scan_config_t scan_cfg = {
-    .show_hidden = false,
-    .scan_type = WIFI_SCAN_TYPE_ACTIVE,
-};
-ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_cfg, false));
-xSemaphoreTake(s_scan_done, pdMS_TO_TICKS(10000));
-// 获取结果并组装 JSON
-ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP)); // 切回纯 AP
+static void wifi_init(void)
+{
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+}
+
+static void wifi_ap_start(void)
+{
+    ESP_LOGI(TAG, "Starting AP: %s", AP_SSID);
+    esp_netif_create_default_wifi_ap();
+
+    wifi_config_t cfg = {
+        .ap = {
+            .ssid_len = strlen(AP_SSID),
+            .max_connection = AP_MAX_CONN,
+            .authmode = WIFI_AUTH_OPEN,
+        },
+    };
+    strncpy((char *)cfg.ap.ssid, AP_SSID, sizeof(cfg.ap.ssid));
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &cfg));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
 ```
 
-### 3. Web 页面（`/` 根路径）
+注意这里 `WIFI_INIT_CONFIG_DEFAULT()` 是个宏，不能直接塞进函数参数里，得先赋值给一个变量再传地址。我之前就被这个坑过。
 
-前端 HTML + 嵌入式 JavaScript，功能：
-
-- 页面加载时自动调用 `/api/scan`
-- 将结果渲染为可点击的列表
-- 点击选择 SSID，自动填入隐藏表单
-- 用户只需输入密码
-
-### 4. 表单提交（`/save` POST）
-
-解析 `application/x-www-form-urlencoded` 格式，URL 解码后保存到 NVS，重启：
+### WiFi 扫描（最核心的部分）
 
 ```c
-save_creds_to_nvs(ssid, password);
-vTaskDelay(pdMS_TO_TICKS(1000));
-esp_restart();
+static SemaphoreHandle_t s_scan_done = NULL;
+static int s_scan_count = 0;
+
+static void scan_done_handler(void *arg, esp_event_base_t base,
+                               int32_t id, void *event_data)
+{
+    s_scan_count = 0;
+    esp_wifi_scan_get_ap_num(&s_scan_count);
+    if (s_scan_done) xSemaphoreGive(s_scan_done);
+}
+
+static esp_err_t scan_get_handler(httpd_req_t *req)
+{
+    // AP 模式下想扫描 WiFi，得先切到混合模式
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    s_scan_done = xSemaphoreCreateBinary();
+    ESP_ERROR_CHECK(esp_event_handler_register(
+        WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &scan_done_handler, NULL));
+
+    wifi_scan_config_t scan_cfg = {
+        .show_hidden = false,
+        .scan_type = WIFI_SCAN_TYPE_ACTIVE,
+    };
+    ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_cfg, false));
+    xSemaphoreTake(s_scan_done, pdMS_TO_TICKS(10000));
+    vSemaphoreDelete(s_scan_done);
+    s_scan_done = NULL;
+
+    uint16_t count = s_scan_count;
+    wifi_ap_record_t *records = calloc(count, sizeof(wifi_ap_record_t));
+    if (records) {
+        esp_wifi_scan_get_ap_records(&count, records);
+    }
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache");
+
+    char buf[512];
+    int len = snprintf(buf, sizeof(buf), "{\"networks\":[");
+    httpd_resp_send_chunk(req, buf, len);
+
+    for (int i = 0; i < (int)count; i++) {
+        if (strlen((char *)records[i].ssid) == 0) continue;
+
+        // 转义 JSON 特殊字符
+        char escaped_ssid[64];
+        int ei = 0;
+        for (int si = 0; records[i].ssid[si] && ei < 62; si++) {
+            if (records[i].ssid[si] == '"' || records[i].ssid[si] == '\\')
+                escaped_ssid[ei++] = '\\';
+            escaped_ssid[ei++] = records[i].ssid[si];
+        }
+        escaped_ssid[ei] = '\0';
+
+        int rssi = records[i].rssi;
+        const char *auth = "OPEN";
+        if (records[i].authmode == WIFI_AUTH_WPA2_PSK) auth = "WPA2";
+        else if (records[i].authmode == WIFI_AUTH_WPA3_PSK) auth = "WPA3";
+        else if (records[i].authmode == WIFI_AUTH_WPA_WPA2_PSK) auth = "WPA/WPA2";
+
+        int bar = (rssi + 100) / 10;
+        if (bar < 0) bar = 0;
+        if (bar > 10) bar = 10;
+
+        len = snprintf(buf, sizeof(buf),
+            "%s{\"ssid\":\"%s\",\"rssi\":%d,\"auth\":\"%s\",\"bar\":%d}",
+            (i > 0) ? "," : "", escaped_ssid, rssi, auth, bar);
+        httpd_resp_send_chunk(req, buf, len);
+    }
+
+    free(records);
+    esp_wifi_set_mode(WIFI_MODE_AP);
+    httpd_resp_send_chunk(req, "]}", 2);
+    httpd_resp_send_chunk(req, NULL, 0);
+    return ESP_OK;
+}
 ```
 
-### 5. DNS 服务器（Captive Portal）
+说几个容易翻车的地方：
 
-监听 UDP 53 端口，将所有 DNS 查询指向 `192.168.4.1`：
+- **AP 模式下不能直接扫 WiFi**，得先切到 `WIFI_MODE_APSTA`，扫完再切回来
+- 扫描是异步的，`esp_wifi_scan_start` 第二个参数 `false` 表示非阻塞。所以需要信号量等回调
+- 扫描结果里的 SSID 可能有特殊字符（比如引号），组 JSON 时得转义
+- 信号强度转成信号格数的算法很简单：`(rssi + 100) / 10`，-100dBm = 0格，-50dBm = 5格，-10dBm = 9格。实际没那么精确，但够用了
+
+### 配网页（HTML + JS）
 
 ```c
-buf[2] |= 0x80;  // Response
-buf[qlen++] = 192; buf[qlen++] = 168;
-buf[qlen++] = 4; buf[qlen++] = 1;   // 192.168.4.1
-sendto(sock, buf, qlen, 0, ...);
+static esp_err_t root_get_handler(httpd_req_t *req)
+{
+    const char *html =
+        "<!DOCTYPE html><html><head>"
+        "<meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+        "<title>ESP32 配网</title>"
+        "<style>"
+        "body{font-family:Arial,sans-serif;max-width:500px;margin:30px auto;padding:20px;background:#f5f5f5}"
+        "h2{color:#333;text-align:center}"
+        ".loading{text-align:center;padding:30px;color:#999}"
+        ".scan-btn{display:block;width:100%;padding:10px;background:#6c757d;color:#fff;border:none;"
+        "border-radius:4px;font-size:14px;cursor:pointer;margin:10px 0}"
+        ".scan-btn:hover{background:#5a6268}"
+        ".network-list{list-style:none;padding:0}"
+        ".network-list li{padding:12px;margin:6px 0;background:#fff;border:2px solid #ddd;"
+        "border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}"
+        ".network-list li:hover,.network-list li.selected{border-color:#007bff;background:#f0f7ff}"
+        ".network-list li .ssid{font-weight:bold;font-size:16px}"
+        ".network-list li .rssi{color:#666;font-size:13px}"
+        "</style></head><body>"
+        "<h2>🔧 WiFi 配网</h2>"
+        "<p style='text-align:center;color:#666'>选择网络，输入密码</p>"
+        "<button class='scan-btn' onclick='scan()'>🔄 重新扫描</button>"
+        "<div id='loading' class='loading'>🔍 扫描中...</div>"
+        "<form id='form' action='/save' method='post' style='display:none'>"
+        "<ul id='list' class='network-list'></ul>"
+        "<input type='hidden' name='ssid' id='selSsid'>"
+        "<p><input type='password' name='password' id='pw' "
+        "placeholder='WiFi 密码（开放网络可不填）' "
+        "style='width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box'></p>"
+        "<input type='submit' value='🚀 连接' "
+        "style='width:100%;padding:12px;background:#007bff;color:#fff;border:none;"
+        "border-radius:4px;font-size:16px;cursor:pointer'>"
+        "</form>"
+        "<script>"
+        "function scan(){"
+        "  var l=document.getElementById('loading');l.style.display='block';"
+        "  document.getElementById('form').style.display='none';"
+        "  fetch('/api/scan').then(function(r){return r.json()}).then(function(d){"
+        "    l.style.display='none';var list=document.getElementById('list');list.innerHTML='';"
+        "    if(!d.networks||d.networks.length==0){alert('附近没扫到 WiFi');return;}"
+        "    d.networks.sort(function(a,b){return b.rssi-a.rssi});"
+        "    d.networks.forEach(function(n){"
+        "      var bars='';for(var b=0;b<10;b++)bars+=b<n.bar?'█':'░';"
+        "      var li=document.createElement('li');"
+        "      li.onclick=function(){"
+        "        document.querySelectorAll('#list li').forEach(function(l){l.className=''});"
+        "        this.className='selected';"
+        "        document.getElementById('selSsid').value=n.ssid;"
+        "        document.getElementById('pw').focus();"
+        "      };"
+        "      li.innerHTML='<span>'+n.ssid+'</span><span style=color:#666>'+bars+' '+n.rssi+'dBm '+n.auth+'</span>';"
+        "      list.appendChild(li);"
+        "    });"
+        "    document.getElementById('form').style.display='block';"
+        "  }).catch(function(){l.style.display='none';alert('扫描失败');});"
+        "}"
+        "scan();"
+        "</script></body></html>";
+
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, html, strlen(html));
+    return ESP_OK;
+}
+```
+
+这个页面没什么特别的，就是一个嵌入式单页应用：
+
+1. 页面加载就调 `scan()` 扫 WiFi
+2. 结果按信号排序，渲染成列表
+3. 点选某个网络，SSID 自动写入隐藏表单
+4. 填密码，提交
+
+我故意没加什么花哨的 CSS 框架，就原生 HTML，体积小，加载快。
+
+### 表单处理
+
+```c
+static esp_err_t save_post_handler(httpd_req_t *req)
+{
+    char buf[256] = {0};
+    int remaining = req->content_len;
+    if (remaining >= (int)sizeof(buf)) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Data too long");
+        return ESP_FAIL;
+    }
+
+    int ret = httpd_req_recv(req, buf, remaining);
+    if (ret <= 0) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Read failed");
+        return ESP_FAIL;
+    }
+    buf[ret] = '\0';
+
+    char ssid[32] = {0}, password[64] = {0};
+    char *p = buf, *key, *val;
+
+    while (*p) {
+        while (*p == ' ' || *p == '\r' || *p == '\n') p++;
+        key = p;
+        while (*p && *p != '=' && *p != '&') p++;
+        if (*p == '=') {
+            *p++ = '\0';
+            val = p;
+            while (*p && *p != '&') p++;
+            if (*p == '&') *p++ = '\0';
+
+            char decoded[64];
+            int di = 0;
+            for (int si = 0; val[si] && di < 63; si++) {
+                if (val[si] == '%' && val[si+1] && val[si+2]) {
+                    char hex[3] = {val[si+1], val[si+2], 0};
+                    decoded[di++] = strtol(hex, NULL, 16);
+                    si += 2;
+                } else if (val[si] == '+') {
+                    decoded[di++] = ' ';
+                } else {
+                    decoded[di++] = val[si];
+                }
+            }
+            decoded[di] = '\0';
+            if (strcmp(key, "ssid") == 0) strncpy(ssid, decoded, sizeof(ssid)-1);
+            else if (strcmp(key, "password") == 0) strncpy(password, decoded, sizeof(password)-1);
+        } else {
+            if (*p) p++;
+        }
+    }
+
+    if (strlen(ssid) == 0) {
+        httpd_resp_set_type(req, "text/html");
+        httpd_resp_send(req,
+            "<html><body><h2>没选 WiFi</h2><a href='/'>回去重选</a></body></html>", -1);
+        return ESP_OK;
+    }
+
+    ESP_LOGI(TAG, "Saving: ssid=%s", ssid);
+    save_creds_to_nvs(ssid, password);
+
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send_chunk(req,
+        "<html><head><meta charset='utf-8'><meta http-equiv='refresh' content='5'>"
+        "<title>OK</title><style>body{font-family:sans-serif;text-align:center;margin:50px}"
+        "h2{color:#28a745}</style></head>"
+        "<body><h2>✅ 已保存</h2><p>设备重启中，稍后会连 ", -1);
+    httpd_resp_send_chunk(req, ssid, strlen(ssid));
+    httpd_resp_send_chunk(req, "</p></body></html>", -1);
+    httpd_resp_send_chunk(req, NULL, 0);
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    esp_restart();
+    return ESP_OK;
+}
+```
+
+这里自己手写了一个 URL 解码器，因为 ESP 的 HTTP 服务器不会自动解码 form 数据。其实就是把 `%20` 转成空格、`+` 转成空格，其他正常字符保持原样。
+
+### DNS 服务器（Captive Portal 关键）
+
+```c
+static void dns_server_task(void *pvParameters)
+{
+    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if (sock < 0) { ESP_LOGE(TAG, "DNS socket failed"); vTaskDelete(NULL); return; }
+
+    struct sockaddr_in sa = {
+        .sin_family = AF_INET,
+        .sin_port = htons(53),
+        .sin_addr.s_addr = htonl(INADDR_ANY),
+    };
+    if (bind(sock, (struct sockaddr *)&sa, sizeof(sa)) < 0) {
+        close(sock); vTaskDelete(NULL); return;
+    }
+
+    uint8_t buf[512];
+    struct sockaddr_in client;
+    socklen_t clen = sizeof(client);
+
+    while (1) {
+        int len = recvfrom(sock, buf, sizeof(buf), 0,
+                           (struct sockaddr *)&client, &clen);
+        if (len < 12) continue;
+
+        buf[2] |= 0x80;               // 标记为响应
+        int qlen = len;
+        buf[qlen++] = 0xC0; buf[qlen++] = 0x0C;    // 名字指针
+        buf[qlen++] = 0x00; buf[qlen++] = 0x01;    // A 记录
+        buf[qlen++] = 0x00; buf[qlen++] = 0x01;    // Class IN
+        buf[qlen++] = 0x00; buf[qlen++] = 0x00;
+        buf[qlen++] = 0x00; buf[qlen++] = 0x3C;    // TTL 60s
+        buf[qlen++] = 0x00; buf[qlen++] = 0x04;    // 数据长度 4
+        buf[qlen++] = 192; buf[qlen++] = 168;
+        buf[qlen++] = 4;   buf[qlen++] = 1;        // 192.168.4.1
+
+        buf[6] = 0; buf[7] = 1;                    // 回答数 = 1
+        sendto(sock, buf, qlen, 0,
+               (struct sockaddr *)&client, clen);
+    }
+}
+```
+
+这个 DNS 服务器极其简陋，不解析具体域名，**所有查询一律返回 192.168.4.1**。好处是用户连上热点后不管访问什么地址都被导向配网页。
+
+需要注意：DNS 是 UDP 端口 53，有些操作系统（macOS  Ventura+）会限制非 root 进程绑定 53 端口。但在 ESP32 上跑没问题。
+
+### STA 连接（配网成功后自动执行）
+
+```c
+#define WIFI_CONNECTED_BIT  BIT0
+#define WIFI_FAIL_BIT       BIT1
+
+static EventGroupHandle_t s_sta_eg = NULL;
+static int s_sta_retry = 0;
+
+static void sta_evt_handler(void *arg, esp_event_base_t base,
+                              int32_t id, void *data)
+{
+    if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
+        if (s_sta_retry < 3) {
+            s_sta_retry++;
+            esp_wifi_connect();
+        } else {
+            xEventGroupSetBits(s_sta_eg, WIFI_FAIL_BIT);
+        }
+    } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t *e = (ip_event_got_ip_t *)data;
+        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&e->ip_info.ip));
+        xEventGroupSetBits(s_sta_eg, WIFI_CONNECTED_BIT);
+    }
+}
+```
+
+这里用事件组来阻塞等待连接结果，最大超时 15 秒，断开重试 3 次。这个逻辑你可以改，比如改成永不超时、后台重试之类的。
+
+### main 函数（整合所有逻辑）
+
+```c
+void app_main(void)
+{
+    // 1. 初始化 NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
+        ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        nvs_flash_erase();
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    // 2. 读 NVS，有凭证就尝试 STA
+    if (load_creds_from_nvs() == ESP_OK) {
+        ESP_LOGI(TAG, "有保存的凭证，尝试 STA...");
+
+        wifi_init();
+        esp_netif_create_default_wifi_sta();
+
+        s_sta_eg = xEventGroupCreate();
+        s_sta_retry = 0;
+
+        esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
+                                    &sta_evt_handler, NULL);
+        esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP,
+                                    &sta_evt_handler, NULL);
+
+        wifi_config_t wc = { .sta = { .threshold.authmode = WIFI_AUTH_WPA2_PSK } };
+        strncpy((char *)wc.sta.ssid, g_saved_ssid, sizeof(wc.sta.ssid));
+        strncpy((char *)wc.sta.password, g_saved_password, sizeof(wc.sta.password));
+        esp_wifi_set_mode(WIFI_MODE_STA);
+        esp_wifi_set_config(WIFI_IF_STA, &wc);
+        esp_wifi_start();
+
+        EventBits_t bits = xEventGroupWaitBits(s_sta_eg,
+            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+            pdFALSE, pdFALSE, pdMS_TO_TICKS(15000));
+
+        if (bits & WIFI_CONNECTED_BIT) {
+            ESP_LOGI(TAG, "STA 连上了，正常运行");
+            return;
+        }
+
+        ESP_LOGW(TAG, "连不上，擦掉凭证，进配网模式");
+        clear_creds_from_nvs();
+        esp_wifi_stop();
+        esp_wifi_deinit();
+    }
+
+    // 3. 启动 AP + Web 配网门户
+    wifi_init();
+    wifi_ap_start();
+    xTaskCreate(dns_server_task, "dns_server", 4096, NULL, 5, NULL);
+
+    // 注册 HTTP 路由
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.lru_purge_enable = true;
+    httpd_handle_t server = NULL;
+    httpd_start(&server, &config);
+
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+        .uri = "/", .method = HTTP_GET, .handler = root_get_handler });
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+        .uri = "/save", .method = HTTP_POST, .handler = save_post_handler });
+    httpd_register_uri_handler(server, &(httpd_uri_t){
+        .uri = "/api/scan", .method = HTTP_GET, .handler = scan_get_handler });
+
+    ESP_LOGI(TAG, "配网门户已启动: AP=%s IP=192.168.4.1", AP_SSID);
+}
+```
+
+启动逻辑翻译成人话就是：
+
+```
+开机 → 查有没有 WiFi 密码
+  ├── 有 → 连
+  │     ├── 连上 → 干活
+  │     └── 连不上 → 擦密码，开热点等配置
+  └── 没有 → 开热点等配置
 ```
 
 ---
 
-## 四、编译与烧录
+## CMakeLists.txt
 
-### 环境配置
+主工程的：
+
+```cmake
+cmake_minimum_required(VERSION 3.16)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(web_prov)
+```
+
+main 目录下的：
+
+```cmake
+idf_component_register(SRCS "web_prov.c"
+                    INCLUDE_DIRS "."
+                    REQUIRES nvs_flash esp_wifi esp_netif esp_event
+                             esp_http_server lwip)
+```
+
+注意 `REQUIRES` 里要写 `esp_http_server`，不然编译报 undefined reference。
+
+---
+
+## 编译和烧录
+
+环境变量设好（路径根据自己的 IDF 安装位置改）：
 
 ```powershell
 $env:IDF_PATH = "D:\Espressif_532"
 $env:IDF_TOOLS_PATH = "D:\Espressif_532_tool"
-$python = "D:\Espressif_532_tool\python_env\idf5.3_py3.11_env\Scripts\python.exe"
+$env:IDF_PYTHON_ENV_PATH = "D:\Espressif_532_tool\python_env\idf5.3_py3.11_env"
+$python = "$env:IDF_PYTHON_ENV_PATH\Scripts\python.exe"
+$idf_py = "$env:IDF_PATH\tools\idf.py"
 ```
 
-### 编译
+设置目标芯片：
 
 ```powershell
-cd F:\espidf_openclaw\web_prov\web_prov
+& $python $idf_py set-target esp32s3
+```
+
+编译：
+
+```powershell
 & $python $idf_py build
 ```
 
-### 烧录
+烧录（COM19 是你设备上的串口号）：
 
 ```powershell
-# COM19 是 ESP32-S3 的串口，根据实际情况修改
-& $python -m esptool --chip esp32s3 -p COM19 -b 460800 write_flash `
-  --flash_mode dio --flash_size 2MB --flash_freq 80m `
+& $python -m esptool --chip esp32s3 -p COM19 -b 460800 `
+  write_flash --flash_mode dio --flash_size 2MB --flash_freq 80m `
   0x0 build/bootloader/bootloader.bin `
   0x8000 build/partition_table/partition-table.bin `
   0x10000 build/web_prov.bin
 ```
 
-### 预期输出
-
-```
-Chip is ESP32-S3 (QFN56) (revision v0.2)
-MAC: XX:XX:XX:XX:XX:XX
-Wrote 21648 bytes (bootloader)
-Wrote 3072 bytes (partition table)
-Wrote 803632 bytes (app)
-Hash of data verified.
-Hard resetting via RTS pin...
-```
+如果你是 ESP32、ESP32-C3 等其他芯片，把 `esp32s3` 改成对应的就行。
 
 ---
 
-## 五、使用方式
+## 使用体验
 
-1. 搜索 WiFi 热点 `ESP32-Config`（开放网络）
-2. 连接后自动弹出配网页，或手动访问 http://192.168.4.1
-3. 页面自动扫描附近 WiFi，点击选择
-4. 输入密码，点击「连接网络」
-5. 设备保存配置并重启，自动连接目标 WiFi
-
----
-
-## 六、文件结构
+连上 `ESP32-Config` 之后，配网页面长这样：
 
 ```
-F:\espidf_openclaw\web_prov\web_prov\
-├── CMakeLists.txt              # 项目 CMake
-├── sdkconfig                   # ESP-IDF 配置
-├── main/
-│   ├── CMakeLists.txt           # 组件 CMake（依赖声明）
-│   └── web_prov.c              # 主程序（全部代码）
-├── build/                       # 编译输出
-│   ├── bootloader/
-│   ├── web_prov.bin
-│   └── ...
-└── dependencies.lock
+┌──────────────────────────────────┐
+│        🔧 WiFi 配网              │
+│    选择网络，输入密码             │
+│                                  │
+│  [🔄 重新扫描]                   │
+│                                  │
+│  ┌ 我家WiFi_5G          ████... │
+│  ├ CMCC-XXXX            ██....  │
+│  ├ TP-LINK_XXX          █...... │
+│  └ ...                          │
+│                                  │
+│  [·······························]│
+│  WiFi 密码                       │
+│                                  │
+│  [        🚀 连接        ]       │
+└──────────────────────────────────┘
 ```
 
----
-
-## 七、关键编译配置（sdkconfig）
-
-| 配置项                 | 值         | 说明           |
-| ---------------------- | ---------- | -------------- |
-| `CONFIG_ESP_WIFI_SOFTAP` | `y`      | 启用 SoftAP    |
-| `CONFIG_ESP_HTTP_SERVER` | `y`      | 启用 HTTP 服务器 |
-| `CONFIG_ESP_NVS_ENCRYPTION` | (默认) | NVS 加密      |
-| `CONFIG_LWIP_DNS`      | `y`         | 启用 DNS       |
+点一个网络，输密码，提交，等重启，完事。
 
 ---
 
-## 八、常见问题
+## 可以怎么改进
 
-**Q: 手机连上 ESP32-Config 但没有弹出配网页？**  
-A: 手动打开浏览器访问 http://192.168.4.1
+这个版本功能已经够用了，如果想折腾，可以从这几个方向下手：
 
-**Q: 扫描不到 WiFi 列表？**  
-A: 点击「重新扫描」按钮重试；确保目标 WiFi 在 2.4GHz 频段
+1. **Web 页面美化** — 现在就是纯文本，可以加图标、动画、进度条
+2. **记住多个 WiFi** — 现在是只存一个，可以改成存多个轮着连
+3. **配网超时自动关 AP** — 比如 5 分钟没人连热点就关掉省电
+4. **OTA + 配网** — 配网成功后顺便检查固件更新
+5. **二维码配网** — 生成 QR Code，手机扫码直接传 WiFi 信息，连网页都不用打开
+6. **接入微信小程序** — 把 /api/scan 的 JSON 接口给小程序用
 
-**Q: 保存后设备连不上 WiFi？**  
-A: 会清除凭证重新进入配网模式。检查密码是否正确、WiFi 是否为 2.4GHz
+---
 
-**Q: ESP32-S3 串口连不上？**  
-A: 检查设备管理器中的串口号，ESP32-S3 内置 USB 串口通常显示为 `USB 串行设备(VID_303A)`
+## 踩坑记录
+
+最后记几个编译时容易碰到的问题：
+
+- **WIFI_INIT_CONFIG_DEFAULT 不能直接当参数传** — 得先赋值给局部变量再传 `&cfg`
+- **AP 模式下 rssi 扫描不到** — 先切 `WIFI_MODE_APSTA`，扫完再切回来
+- **中文 SSID** — ESP-IDF 的 TCP/IP 栈对中文 SSID 支持没问题，但 JSON 转义要注意
+- **DNS 端口被占用** — 某些 sdkconfig 默认会开 mDNS，记得关或改端口
+- **栈溢出** — HTTP server 的 handler 默认栈可能不够，可以调 `HTTPD_DEFAULT_CONFIG()` 里的 `stack_size`
