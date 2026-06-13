@@ -9,7 +9,7 @@ import rehypeKatex from 'rehype-katex';
 const config: Config = {
   title: 'pomili',
   tagline: '探索 · 构建 · 分享',
-  favicon: 'img/favicon.svg',
+  favicon: 'img/logo.png',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -80,7 +80,7 @@ const config: Config = {
       title: 'pomili',
       logo: {
         alt: 'pomili',
-        src: 'img/logo.svg',
+        src: 'img/logo.png',
       },
       items: [
         {
