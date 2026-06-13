@@ -90,6 +90,7 @@ const config: Config = {
           label: '文档',
         },
         {to: '/blog', label: '博客', position: 'left'},
+        {to: '/drone', label: '无人机', position: 'left'},
         {to: '/tools', label: '工具', position: 'left'},
         {
           href: 'https://github.com/pomili/docs-site',
