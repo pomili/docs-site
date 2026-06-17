@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs_site=self.webpackChunkdocs_site||[]).push([["8416"],{6600(i){i.exports=JSON.parse('{"authors":[{"name":"pomili","title":"\u5F00\u53D1\u8005","page":{"permalink":"/blog/authors/pomili"},"socials":{"github":"https://github.com/pomili"},"key":"pomili","count":2}]}')}}]);
