@@ -12,24 +12,40 @@
 }
 
 .pageBody {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 40px 24px 80px;
 }
 
+/* 三栏布局 */
+.row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+/* 手机端：单列堆叠 */
+@media screen and (max-width: 768px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
 .section {
-  margin-bottom: 48px;
+  min-width: 0;
 }
 
 .sectionTitle {
   font-size: 0.85rem;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #656d76;
-  margin: 0 0 18px;
+  margin: 0 0 16px;
   padding-bottom: 8px;
   border-bottom: 1px solid #d0d7de;
+  text-align: center;
 }
 
 /* Dark mode */

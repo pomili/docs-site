@@ -31,20 +31,22 @@ export default function Home(): ReactNode {
       description={siteConfig.tagline}>
       <HomepageHeader />
       <main className={styles.pageBody}>
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>日历</h2>
-          <Calendar />
-        </section>
+        <div className={styles.row}>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>日历</h2>
+            <Calendar />
+          </section>
 
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>时间</h2>
-          <Clock />
-        </section>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>时间</h2>
+            <Clock />
+          </section>
 
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>古诗词</h2>
-          <PoetryQuote />
-        </section>
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>古诗词</h2>
+            <PoetryQuote />
+          </section>
+        </div>
       </main>
     </Layout>
   );

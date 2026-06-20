@@ -1,20 +1,20 @@
 .calendarWrap {
-  max-width: 380px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .monthLabel {
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 600;
-  min-width: 120px;
+  min-width: 100px;
   text-align: center;
   color: var(--ifm-font-color-base);
 }
@@ -24,8 +24,8 @@
   border: 1px solid #d0d7de;
   border-radius: 6px;
   cursor: pointer;
-  padding: 4px 10px;
-  font-size: 0.85rem;
+  padding: 2px 8px;
+  font-size: 0.75rem;
   color: var(--ifm-font-color-base);
   transition: background 0.15s;
 }
@@ -40,8 +40,8 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  padding: 4px 12px;
-  font-size: 0.85rem;
+  padding: 2px 8px;
+  font-size: 0.75rem;
   transition: opacity 0.15s;
 }
 
@@ -53,20 +53,20 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .weekdayCell {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #656d76;
-  padding: 4px 0;
+  padding: 2px 0;
 }
 
 .dayGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 2px;
 }
 
 .dayCell {
@@ -74,8 +74,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   cursor: default;
   transition: background 0.15s;
 }
