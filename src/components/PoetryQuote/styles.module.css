@@ -1,5 +1,10 @@
 .poemCard {
   width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   padding: 20px 16px;
   border: 1px solid #d0d7de;
   border-radius: 12px;

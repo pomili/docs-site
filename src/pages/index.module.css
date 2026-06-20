@@ -22,7 +22,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 32px;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* 手机端：单列堆叠 */
@@ -35,6 +35,8 @@
 
 .section {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sectionTitle {
