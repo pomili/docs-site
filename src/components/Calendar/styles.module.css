@@ -1,14 +1,22 @@
 .calendarWrap {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   height: 320px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   box-sizing: border-box;
   padding: 12px 8px;
-  border: 1px solid #d0d7de;
-  border-radius: 12px;
-  background: #f6f8fa;
+  border-radius: 16px;
+  overflow: hidden;
+
+  /* 毛玻璃 */
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 @media screen and (max-width: 768px) {
@@ -32,26 +40,26 @@
   font-weight: 600;
   min-width: 100px;
   text-align: center;
-  color: var(--ifm-font-color-base);
+  color: #1a1a2e;
 }
 
 .navBtn {
-  background: none;
-  border: 1px solid #d0d7de;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 6px;
   cursor: pointer;
   padding: 2px 8px;
   font-size: 0.75rem;
-  color: var(--ifm-font-color-base);
+  color: #1a1a2e;
   transition: background 0.15s;
 }
 
 .navBtn:hover {
-  background: var(--ifm-color-primary-lightest);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .todayBtn {
-  background: var(--ifm-color-primary);
+  background: rgba(46, 133, 85, 0.85);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -62,7 +70,7 @@
 }
 
 .todayBtn:hover {
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .weekdayRow {
@@ -75,7 +83,7 @@
 .weekdayCell {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #656d76;
+  color: #666;
   padding: 2px 0;
 }
 
@@ -93,22 +101,22 @@
   border-radius: 6px;
   font-size: 0.85rem;
   cursor: default;
+  color: #1a1a2e;
   transition: background 0.15s;
 }
 
 .dayCell:hover {
-  background: var(--ifm-color-primary-lightest);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .dayToday {
-  background: var(--ifm-color-primary);
+  background: rgba(46, 133, 85, 0.85);
   color: #fff;
   font-weight: 700;
 }
 
 .dayToday:hover {
-  background: var(--ifm-color-primary);
-  opacity: 0.9;
+  background: rgba(46, 133, 85, 0.7);
 }
 
 .dayEmpty {
@@ -117,22 +125,41 @@
 
 /* Dark mode */
 [data-theme='dark'] .calendarWrap {
-  border-color: #30363d;
-  background: #161b22;
+  background: rgba(22, 27, 34, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .monthLabel {
+  color: #e6edf3;
 }
 
 [data-theme='dark'] .navBtn {
-  border-color: #30363d;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e6edf3;
 }
 
 [data-theme='dark'] .navBtn:hover {
-  background: rgba(37, 194, 160, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .todayBtn {
+  background: rgba(37, 194, 160, 0.85);
 }
 
 [data-theme='dark'] .weekdayCell {
   color: #8b949e;
 }
 
+[data-theme='dark'] .dayCell {
+  color: #e6edf3;
+}
+
 [data-theme='dark'] .dayCell:hover {
-  background: rgba(37, 194, 160, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .dayToday {
+  background: rgba(37, 194, 160, 0.85);
 }

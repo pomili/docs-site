@@ -15,6 +15,27 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 24px 80px;
+  position: relative;
+}
+
+/* 背景装饰：彩色光斑，毛玻璃透过它模糊可见 */
+.pageBody::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 600px 400px at 20% 50%, rgba(46, 133, 85, 0.12), transparent),
+    radial-gradient(ellipse 500px 350px at 80% 30%, rgba(37, 194, 160, 0.1), transparent),
+    radial-gradient(ellipse 400px 300px at 50% 80%, rgba(120, 100, 220, 0.08), transparent);
+  pointer-events: none;
+}
+
+[data-theme='dark'] .pageBody::before {
+  background:
+    radial-gradient(ellipse 600px 400px at 20% 50%, rgba(37, 194, 160, 0.1), transparent),
+    radial-gradient(ellipse 500px 350px at 80% 30%, rgba(100, 180, 255, 0.08), transparent),
+    radial-gradient(ellipse 400px 300px at 50% 80%, rgba(180, 130, 255, 0.06), transparent);
 }
 
 /* 三栏布局：inline-block，每个栏宽度精确锁定 */
