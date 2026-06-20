@@ -1,0 +1,29 @@
+.clockWrap {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.timeDisplay {
+  font-size: 3.5rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--ifm-font-color-base);
+  line-height: 1.2;
+}
+
+.dateDisplay {
+  font-size: 1.1rem;
+  color: #656d76;
+  margin-top: 6px;
+}
+
+@media screen and (max-width: 480px) {
+  .timeDisplay {
+    font-size: 2.4rem;
+  }
+}
+
+[data-theme='dark'] .dateDisplay {
+  color: #8b949e;
+}

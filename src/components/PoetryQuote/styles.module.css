@@ -1,0 +1,47 @@
+.poemCard {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 28px 24px;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  background: #f6f8fa;
+  text-align: center;
+}
+
+.poemContent {
+  font-size: 1.2rem;
+  line-height: 2;
+  color: var(--ifm-font-color-base);
+  margin-bottom: 12px;
+}
+
+.poemMeta {
+  font-size: 0.9rem;
+  color: #656d76;
+  margin-bottom: 16px;
+}
+
+.refreshBtn {
+  background: var(--ifm-color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 6px 20px;
+  font-size: 0.9rem;
+  transition: opacity 0.15s;
+}
+
+.refreshBtn:hover {
+  opacity: 0.85;
+}
+
+/* Dark mode */
+[data-theme='dark'] .poemCard {
+  background: #161b22;
+  border-color: #30363d;
+}
+
+[data-theme='dark'] .poemMeta {
+  color: #8b949e;
+}
