@@ -45,14 +45,10 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   color: #656d76;
-  margin: 0 0 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #d0d7de;
+  margin: 0 0 12px;
   text-align: center;
 }
 
-/* Dark mode */
 [data-theme='dark'] .sectionTitle {
   color: #8b949e;
-  border-bottom-color: #30363d;
 }

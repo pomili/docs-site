@@ -1,6 +1,7 @@
 .poemCard {
   width: 100%;
-  min-height: 300px;
+  height: 320px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -10,6 +11,7 @@
   border-radius: 12px;
   background: #f6f8fa;
   text-align: center;
+  overflow: hidden;
 }
 
 .poemContent {
@@ -17,12 +19,18 @@
   line-height: 1.9;
   color: var(--ifm-font-color-base);
   margin-bottom: 10px;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .poemMeta {
   font-size: 0.8rem;
   color: #656d76;
   margin-bottom: 14px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .refreshBtn {
@@ -34,19 +42,25 @@
   padding: 5px 16px;
   font-size: 0.82rem;
   transition: opacity 0.15s;
+  flex-shrink: 0;
 }
 
 .refreshBtn:hover {
   opacity: 0.85;
 }
 
-/* 手机端恢复较大字号 */
+/* 手机端 */
 @media screen and (max-width: 768px) {
+  .poemCard {
+    height: auto;
+    min-height: 280px;
+  }
   .poemContent {
     font-size: 1.15rem;
   }
   .poemMeta {
     font-size: 0.9rem;
+    white-space: normal;
   }
 }
 
