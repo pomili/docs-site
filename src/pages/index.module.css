@@ -17,27 +17,31 @@
   padding: 40px 24px 80px;
 }
 
-/* 三栏布局 */
+/* 三栏布局：flex + 精确固定宽度，内容不会影响栏宽 */
 .row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
   gap: 32px;
-  align-items: start;
+}
+
+.section {
+  flex: 0 0 calc((100% - 64px) / 3);
+  max-width: calc((100% - 64px) / 3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* 手机端：单列堆叠 */
 @media screen and (max-width: 768px) {
   .row {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 40px;
   }
-}
-
-.section {
-  min-width: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  .section {
+    flex: 1 1 auto;
+    max-width: none;
+    overflow: visible;
+  }
 }
 
 .sectionTitle {
