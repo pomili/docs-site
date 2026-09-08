@@ -1,0 +1,681 @@
+<!doctype html><html lang=en dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-algo/多元线性回归" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.1"><title data-rh=true>多元线性回归 | pomili</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://pomili.github.io/en/img/docusaurus-social-card.jpg /><meta data-rh=true name=twitter:image content=https://pomili.github.io/en/img/docusaurus-social-card.jpg /><meta data-rh=true property=og:url content=https://pomili.github.io/en/docs/algo/多元线性回归 /><meta data-rh=true property=og:locale content=en /><meta data-rh=true property=og:locale:alternate content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=en /><meta data-rh=true name=docsearch:language content=en /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="多元线性回归 | pomili"/><meta data-rh=true name=description content="面向数学建模竞赛备赛学习者。本文从零讲清多元线性回归的原理推导、适用场景、全套统计指标、6 张诊断图与完整可运行代码（手写实现 + sklearn 对照），最后一节给出竞赛论文写作话术模板。"/><meta data-rh=true property=og:description content="面向数学建模竞赛备赛学习者。本文从零讲清多元线性回归的原理推导、适用场景、全套统计指标、6 张诊断图与完整可运行代码（手写实现 + sklearn 对照），最后一节给出竞赛论文写作话术模板。"/><link data-rh=true rel=icon href=/en/img/logo.png /><link data-rh=true rel=canonical href=https://pomili.github.io/en/docs/algo/多元线性回归 /><link data-rh=true rel=alternate href=https://pomili.github.io/docs/algo/多元线性回归 hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://pomili.github.io/en/docs/algo/多元线性回归 hreflang=en /><link data-rh=true rel=alternate href=https://pomili.github.io/docs/algo/多元线性回归 hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://pomili.github.io/en/docs/algo/","name":"数学建模算法学习文档","position":1},{"@type":"ListItem","item":"https://pomili.github.io/en/docs/algo/多元线性回归","name":"多元线性回归","position":2}]}</script><link rel=alternate type=application/rss+xml href=/en/blog/rss.xml title="pomili RSS Feed"><link rel=alternate type=application/atom+xml href=/en/blog/atom.xml title="pomili Atom Feed"><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNHUKE2NxJT5GJEnGkl1zWJNGHSwE3BnADklYp+1MGU6YDpkLp5QhB6 crossorigin=anonymous><link rel=stylesheet href=/en/assets/css/styles.b6024cf9.css /><script src=/en/assets/js/runtime~main.b2a77779.js defer></script><script src=/en/assets/js/main.0e397aaf.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-5cc")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/en/img/logo.png /><div role=region aria-label="Skip to main content"><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>Skip to main content</a></div><nav aria-label=Main class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/en/><div class=navbar__logo><img src=/en/img/logo.png alt=pomili class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/en/img/logo.png alt=pomili class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">pomili</b></a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/en/docs/intro>文档</a><a class="navbar__item navbar__link" href=/en/blog>博客</a><a class="navbar__item navbar__link" href=/en/drone>无人机</a><a class="navbar__item navbar__link" href=/en/tools>工具</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/pomili/docs-site target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/intro><span title=欢迎 class=linkLabel_WmDU>欢迎</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/cmake-stm32><span title="CMake 构建 STM32 程序" class=linkLabel_WmDU>CMake 构建 STM32 程序</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/en/docs/cubemx2/><span title="STM32CubeMX2 文档" class=categoryLinkLabel_W154>STM32CubeMX2 文档</span></a><button aria-label="Expand sidebar category 'STM32CubeMX2 文档'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/deploy-docusaurus><span title="部署 Docusaurus" class=linkLabel_WmDU>部署 Docusaurus</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/docusaurus-guide><span title="Docusaurus 使用指南" class=linkLabel_WmDU>Docusaurus 使用指南</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/en/docs/ml/><span title=机器学习专题 class=categoryLinkLabel_W154>机器学习专题</span></a><button aria-label="Expand sidebar category '机器学习专题'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/how-to-write-sci><span title="如何撰写 SCI 论文" class=linkLabel_WmDU>如何撰写 SCI 论文</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/esp32-web-provisioning><span title="ESP32 网页配网从零搭建" class=linkLabel_WmDU>ESP32 网页配网从零搭建</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/esp32-ble-provisioning><span title="ESP32 BLE 配网从零搭建" class=linkLabel_WmDU>ESP32 BLE 配网从零搭建</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/en/docs/algo/><span title=数学建模算法学习文档 class=categoryLinkLabel_W154>数学建模算法学习文档</span></a><button aria-label="Collapse sidebar category '数学建模算法学习文档'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/数学建模常用符号解释><span title=数学建模常用符号解释 class=linkLabel_WmDU>数学建模常用符号解释</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/一元线性回归><span title=一元线性回归 class=linkLabel_WmDU>一元线性回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/en/docs/algo/多元线性回归><span title=多元线性回归 class=linkLabel_WmDU>多元线性回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/多项式回归><span title=多项式回归 class=linkLabel_WmDU>多项式回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/非线性回归><span title=非线性回归 class=linkLabel_WmDU>非线性回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/Logistic回归><span title=Logistic回归 class=linkLabel_WmDU>Logistic回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/岭回归><span title=岭回归 class=linkLabel_WmDU>岭回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/线性规划><span title=线性规划 class=linkLabel_WmDU>线性规划</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/整数规划><span title=整数规划 class=linkLabel_WmDU>整数规划</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/遗传算法><span title=遗传算法 class=linkLabel_WmDU>遗传算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/粒子群算法><span title=粒子群算法 class=linkLabel_WmDU>粒子群算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/模拟退火算法><span title=模拟退火算法 class=linkLabel_WmDU>模拟退火算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/蚁群算法><span title=蚁群算法 class=linkLabel_WmDU>蚁群算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/层次分析法><span title=层次分析法 class=linkLabel_WmDU>层次分析法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/TOPSIS法><span title=TOPSIS法 class=linkLabel_WmDU>TOPSIS法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/熵权法><span title=熵权法 class=linkLabel_WmDU>熵权法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/模糊综合评价><span title=模糊综合评价 class=linkLabel_WmDU>模糊综合评价</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/决策树><span title=决策树 class=linkLabel_WmDU>决策树</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/随机森林><span title=随机森林 class=linkLabel_WmDU>随机森林</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/支持向量机><span title=支持向量机 class=linkLabel_WmDU>支持向量机</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/朴素贝叶斯><span title=朴素贝叶斯 class=linkLabel_WmDU>朴素贝叶斯</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/K近邻算法><span title=K近邻算法 class=linkLabel_WmDU>K近邻算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/K-means聚类><span title=K-means聚类 class=linkLabel_WmDU>K-means聚类</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/层次聚类><span title=层次聚类 class=linkLabel_WmDU>层次聚类</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/DBSCAN聚类><span title=DBSCAN聚类 class=linkLabel_WmDU>DBSCAN聚类</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/主成分分析><span title=主成分分析 class=linkLabel_WmDU>主成分分析</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/09_0-1规划><span title=0-1规划 class=linkLabel_WmDU>0-1规划</span></a></ul><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/fft><span title=快速傅里叶变换（FFT） class=linkLabel_WmDU>快速傅里叶变换（FFT）</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/en/docs/poetry/><span title=宋词三百首 class=categoryLinkLabel_W154>宋词三百首</span></a><button aria-label="Expand sidebar category '宋词三百首'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role=button aria-expanded=false href=/en/docs/ros/C++知识总结><span title=ros class=categoryLinkLabel_W154>ros</span></a></div><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/姿态解算><span title=姿态解算 class=linkLabel_WmDU>姿态解算</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/陀螺仪介绍><span title=陀螺仪 class=linkLabel_WmDU>陀螺仪</span></a></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=Breadcrumbs><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label="Home page" class=breadcrumbs__link href=/en/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/en/docs/algo/><span>数学建模算法学习文档</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>多元线性回归</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>多元线性回归</h1></header>
+<blockquote>
+<p>面向数学建模竞赛备赛学习者。本文从零讲清多元线性回归的原理推导、适用场景、全套统计指标、6 张诊断图与完整可运行代码（手写实现 + sklearn 对照），最后一节给出竞赛论文写作话术模板。</p>
+<p>运行环境：Python 3.12，仅依赖 numpy、scipy、scikit-learn、matplotlib、pandas（本机无 seaborn / statsmodels，代码已全部避免使用）。</p>
+</blockquote>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一算法含义>一、算法含义<a href=#一算法含义 class=hash-link aria-label="Direct link to 一、算法含义" title="Direct link to 一、算法含义" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=11-一句话理解>1.1 一句话理解<a href=#11-一句话理解 class=hash-link aria-label="Direct link to 1.1 一句话理解" title="Direct link to 1.1 一句话理解" translate=no>​</a></h3>
+<p>一元回归是「用一个自变量解释 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>y</mi></mrow><annotation encoding=application/x-tex>y</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.625em;vertical-align:-0.1944em></span><span class="mord mathnormal" style=margin-right:0.0359em>y</span></span></span></span>」，多元线性回归是「让多个自变量<strong>同时</strong>解释 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>y</mi></mrow><annotation encoding=application/x-tex>y</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.625em;vertical-align:-0.1944em></span><span class="mord mathnormal" style=margin-right:0.0359em>y</span></span></span></span>」。</p>
+<p>例如预测房价：面积、地段、房龄、楼层、学区都会影响房价，只用一个变量解释必然粗糙。多元线性回归假设房价是这些因素的<strong>线性加权</strong>：</p>
+<p><span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>y</mi><mo>=</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>β</mi><mn>2</mn></msub><msub><mi>x</mi><mn>2</mn></msub><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>β</mi><mi>p</mi></msub><msub><mi>x</mi><mi>p</mi></msub><mo>+</mo><mi>ε</mi></mrow><annotation encoding=application/x-tex>y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \cdots + \beta_p x_p + \varepsilon</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.625em;vertical-align:-0.1944em></span><span class="mord mathnormal" style=margin-right:0.0359em>y</span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>=</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mord><span class="mord mathnormal">x</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mord><span class="mord mathnormal">x</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.6667em;vertical-align:-0.0833em></span><span class=minner>⋯</span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.9805em;vertical-align:-0.2861em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.1514em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span><span class=mord><span class="mord mathnormal">x</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.1514em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.4306em></span><span class="mord mathnormal">ε</span></span></span></span></p>
+<p>其中每个系数 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><msub><mi>β</mi><mi>j</mi></msub></mrow><annotation encoding=application/x-tex>\beta_j</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.9805em;vertical-align:-0.2861em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style=margin-right:0.0572em>j</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span></span></span></span> 的含义是：<strong>在其他变量不变的前提下，<span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><msub><mi>x</mi><mi>j</mi></msub></mrow><annotation encoding=application/x-tex>x_j</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.7167em;vertical-align:-0.2861em></span><span class=mord><span class="mord mathnormal">x</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style=margin-right:0.0572em>j</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span></span></span></span> 每增加 1 个单位，<span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>y</mi></mrow><annotation encoding=application/x-tex>y</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.625em;vertical-align:-0.1944em></span><span class="mord mathnormal" style=margin-right:0.0359em>y</span></span></span></span> 平均变化 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><msub><mi>β</mi><mi>j</mi></msub></mrow><annotation encoding=application/x-tex>\beta_j</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.9805em;vertical-align:-0.2861em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style=margin-right:0.0572em>j</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span></span></span></span> 个单位</strong>。这就是计量经济学里常说的「偏效应」「控制其他变量后的净影响」——多元回归的系数比一元回归的斜率多了一层「把别人的影响先剔掉」的意思，这也是它最有价值的地方。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=12-数学模型标量与矩阵形式>1.2 数学模型（标量与矩阵形式）<a href=#12-数学模型标量与矩阵形式 class=hash-link aria-label="Direct link to 1.2 数学模型（标量与矩阵形式）" title="Direct link to 1.2 数学模型（标量与矩阵形式）" translate=no>​</a></h3>
+<p>对第 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>i</mi></mrow><annotation encoding=application/x-tex>i</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6595em></span><span class="mord mathnormal">i</span></span></span></span> 个样本（<span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo separator=true>,</mo><mn>2</mn><mo separator=true>,</mo><mo>…</mo><mo separator=true>,</mo><mi>n</mi></mrow><annotation encoding=application/x-tex>i=1,2,\dots,n</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6595em></span><span class="mord mathnormal">i</span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>=</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.8389em;vertical-align:-0.1944em></span><span class=mord>1</span><span class=mpunct>,</span><span class=mspace style=margin-right:0.1667em></span><span class=mord>2</span><span class=mpunct>,</span><span class=mspace style=margin-right:0.1667em></span><span class=minner>…</span><span class=mspace style=margin-right:0.1667em></span><span class=mpunct>,</span><span class=mspace style=margin-right:0.1667em></span><span class="mord mathnormal">n</span></span></span></span>）：</p>
+<p><span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><msub><mi>x</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>β</mi><mn>2</mn></msub><msub><mi>x</mi><mrow><mi>i</mi><mn>2</mn></mrow></msub><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>β</mi><mi>p</mi></msub><msub><mi>x</mi><mrow><mi>i</mi><mi>p</mi></mrow></msub><mo>+</mo><msub><mi>ε</mi><mi>i</mi></msub></mrow><annotation encoding=application/x-tex>y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_p x_{ip} + \varepsilon_i</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.625em;vertical-align:-0.1944em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0359em>y</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:-0.0359em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>=</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mord><span class="mord mathnormal">x</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mtight">1</span></span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3011em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mord><span class="mord mathnormal">x</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mtight">2</span></span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.6667em;vertical-align:-0.0833em></span><span class=minner>⋯</span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.9805em;vertical-align:-0.2861em></span><span class=mord><span class="mord mathnormal" style=margin-right:0.0528em>β</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.1514em><span style=top:-2.55em;margin-left:-0.0528em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span><span class=mord><span class="mord mathnormal">x</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">p</span></span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.5806em;vertical-align:-0.15em></span><span class=mord><span class="mord mathnormal">ε</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.15em><span></span></span></span></span></span></span></span></span></span></p>
+<p>写成矩阵形式（竞赛论文中的标准写法）：</p>
+<p><span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi mathvariant=bold-italic>y</mi><mo>=</mo><mi mathvariant=bold-italic>X</mi><mi mathvariant=bold-italic>β</mi><mo>+</mo><mi mathvariant=bold-italic>ε</mi></mrow><annotation encoding=application/x-tex>\boldsymbol{y} = \boldsymbol{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6389em;vertical-align:-0.1944em></span><span class=mord><span class=mord><span class="mord boldsymbol" style=margin-right:0.037em>y</span></span></span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>=</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class=mord><span class=mord><span class="mord boldsymbol" style=margin-right:0.0778em>X</span></span></span><span class=mord><span class=mord><span class="mord boldsymbol" style=margin-right:0.034em>β</span></span></span><span class=mspace style=margin-right:0.2222em></span><span class=mbin>+</span><span class=mspace style=margin-right:0.2222em></span></span><span class=base><span class=strut style=height:0.4444em></span><span class=mord><span class=mord><span class="mord boldsymbol">ε</span></span></span></span></span></span></p>
+<p>各矩阵展开如下：</p>
+<span class=katex-error title="ParseError: KaTeX parse error: Can't use function '$' in math mode at position 511: … \end{bmatrix} $̲$
+
+注意：设计矩阵 $\bo…" style=color:#cc0000>\underset{n \times (p+1)}{\boldsymbol{X}} = \begin{bmatrix} 1 & x_{11} & x_{12} & \cdots & x_{1p} \\ 1 & x_{21} & x_{22} & \cdots & x_{2p} \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ 1 & x_{n1} & x_{n2} & \cdots & x_{np} \end{bmatrix}, \quad
+\underset{(p+1) \times 1}{\boldsymbol{\beta}} = \begin{bmatrix} \beta_0 \\ \beta_1 \\ \vdots \\ \beta_p \end{bmatrix}, \quad
+\underset{n \times 1}{\boldsymbol{\varepsilon}} = \begin{bmatrix} \varepsilon_1 \\ \varepsilon_2 \\ \vdots \\ \varepsilon_n \end{bmatrix} $$
+
+注意：设计矩阵 $\boldsymbol{X}$ 的**第一列全为 1**，对应截距 $\beta_0$；第二列起才是 $p$ 个特征的取值。因此 $\boldsymbol{X}$ 是 $n$ 行、$p+1$ 列。
+
+### 1.3 参数估计：最小二乘法与正规方程推导（重要，竞赛问答题常考）
+
+目标：找一组 $\hat{\boldsymbol{\beta}}$，使**残差平方和（RSS）最小**：
+
+$$ S(\boldsymbol{\beta}) = \sum_{i=1}^{n} e_i^2 = \boldsymbol{e}^T\boldsymbol{e} = (\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta})^T(\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta}) $$
+
+第一步，展开：
+
+$$ S(\boldsymbol{\beta}) = \boldsymbol{y}^T\boldsymbol{y} - 2\boldsymbol{\beta}^T\boldsymbol{X}^T\boldsymbol{y} + \boldsymbol{\beta}^T\boldsymbol{X}^T\boldsymbol{X}\boldsymbol{\beta} $$
+
+第二步，对 $\boldsymbol{\beta}$ 求梯度（矩阵微积分规则，注意 $\boldsymbol{X}^T\boldsymbol{X}$ 是对称矩阵）：
+
+$$ \frac{\partial S}{\partial \boldsymbol{\beta}} = -2\boldsymbol{X}^T\boldsymbol{y} + 2\boldsymbol{X}^T\boldsymbol{X}\boldsymbol{\beta} $$
+
+第三步，令梯度为零，得到**正规方程（Normal Equation）**：
+
+$$ \boldsymbol{X}^T\boldsymbol{X}\hat{\boldsymbol{\beta}} = \boldsymbol{X}^T\boldsymbol{y} $$
+
+第四步，当 $\boldsymbol{X}^T\boldsymbol{X}$ 可逆（即 $\boldsymbol{X}$ 满列秩、不存在完全多重共线性）时：
+
+$$ \boxed{\;\hat{\boldsymbol{\beta}} = (\boldsymbol{X}^T\boldsymbol{X})^{-1}\boldsymbol{X}^T\boldsymbol{y}\;} $$
+
+补充说明：
+
+- 二阶导 $\dfrac{\partial^2 S}{\partial \boldsymbol{\beta}^2} = 2\boldsymbol{X}^T\boldsymbol{X}$ 在 $\boldsymbol{X}$ 满列秩时正定，因此 $\hat{\boldsymbol{\beta}}$ 是**全局最小值点**。
+- 几何直觉：$\hat{\boldsymbol{y}} = \boldsymbol{X}\hat{\boldsymbol{\beta}}$ 是 $\boldsymbol{y}$ 在 $\boldsymbol{X}$ 列空间上的**正交投影**，投影矩阵（帽子矩阵）$\boldsymbol{H} = \boldsymbol{X}(\boldsymbol{X}^T\boldsymbol{X})^{-1}\boldsymbol{X}^T$ 满足 $\hat{\boldsymbol{y}} = \boldsymbol{H}\boldsymbol{y}$；残差 $\boldsymbol{e} = \boldsymbol{y} - \hat{\boldsymbol{y}}$ 与所有自变量列正交，即 $\boldsymbol{X}^T\boldsymbol{e} = \boldsymbol{0}$（这就是正规方程的另一种写法）。
+- 数值实现时，实际代码用 `np.linalg.solve(XᵀX, Xᵀy)` 解线性方程组，等价但比显式求逆 `inv(XᵀX) @ Xᵀy` 更稳定。
+
+### 1.4 模型假设（高斯—马尔可夫条件）
+
+OLS 估计要有好性质，需要以下假设：
+
+1. **线性**：$y$ 与 $\boldsymbol{X}$ 之间是线性关系（指对**参数**线性；加入 $x^2$、$\ln x$ 等变换项后仍是线性模型，称「可线性化」）。
+2. **零均值（严格外生）**：$E(\varepsilon_i \mid \boldsymbol{X}) = 0$，即误差不系统性地偏向某一边。
+3. **同方差**：$\mathrm{Var}(\varepsilon_i) = \sigma^2$ 为常数，不随 $x$ 变化。
+4. **无自相关**：$\mathrm{Cov}(\varepsilon_i, \varepsilon_j) = 0 \; (i \ne j)$。
+5. **无完全共线性**：$\boldsymbol{X}$ 满列秩，任何自变量都不能被其余自变量精确线性表出。
+
+**高斯—马尔可夫定理**：在假设 1–5 下，OLS 估计是所有线性无偏估计中方差最小的（BLUE，Best Linear Unbiased Estimator）。
+
+6. **正态性**：$\boldsymbol{\varepsilon} \sim N(\boldsymbol{0}, \sigma^2 \boldsymbol{I})$。注意：正态性**只用于** t 检验、F 检验、置信区间等统计推断；点估计 $\hat{\boldsymbol{\beta}}$ 本身不需要正态假设。样本量大时中心极限定理可让推断近似成立。
+
+### 1.5 与一元回归的关系
+
+- **一元回归是特例**：$p=1$ 时，正规方程退化为 $\hat\beta_1 = \dfrac{S_{xy}}{S_{xx}}$、$\hat\beta_0 = \bar y - \hat\beta_1 \bar x$，与高中/大一学的最小二乘公式完全一致。
+- **系数含义升级**：一元回归系数是「总效应」；多元回归系数是「偏效应」。例如：冰淇淋销量与温度、遮阳伞销量与温度都正相关，但把两者同时放入模型后，它们的系数可能变小甚至变号——因为它们互相「抢」了对方的解释力（混杂效应）。因此**不能用逐个做一元回归来代替多元回归**。
+- **显著性问题**：多元回归中系数显著性还受共线性影响（见 1.6 和第七节），一元回归没有这个问题。
+
+### 1.6 优缺点
+
+**优点**
+
+1. **可解释性强**：系数直接回答「每个因素影响多大、方向如何」，这是评委最看重的「模型讲得清」。
+2. **计算简单稳定**：有闭式解（正规方程），$n$ 几千、$p$ 几十时秒出结果，不存在收敛问题。
+3. **推断完备**：自带 t 检验、F 检验、置信区间、VIF 等一整套统计工具，论文中好写「假设检验」章节。
+4. **是高级方法的地基**：岭回归、Lasso、主成分回归、广义线性模型都在它之上扩展，学好它才能讲清后续模型。
+5. **预测可外推**：给新样本直接 $\hat y = \boldsymbol{x}^T\hat{\boldsymbol{\beta}}$，适合插值型预测。
+
+**缺点**
+
+1. **对共线性敏感**：自变量高度相关时，系数方差被 VIF 倍数放大，估计符号都可能失真（本文第七节有演示）。
+2. **对异常值敏感**：平方损失会把离群点的残差平方放大，个别坏点能「撬动」整条回归平面。
+3. **假设严格**：要求线性、同方差、残差正态，现实数据常常不满足，需要先变换或换模型。
+4. **外推风险**：训练数据范围之外（如用 2020 年数据预测 2030 年）预测不可靠。
+5. **不自动处理非线性、交互作用、缺失值**，需要人工构造特征。
+
+---
+
+## 二、何时使用（适用场景与条件）
+
+### 2.1 适用场景
+
+| 目标 | 说明 | 竞赛中常见形式 |
+|------|------|----------------|
+| 预测 | 用多个已知特征预测未知 $y$ | 预测类题目（销量、房价、产量）的**基线模型**，先跑 OLS 再上机器学习对比 |
+| 解释 | 想知道每个因素对 $y$ 的独立影响 | 「影响因素分析」「机理探究」类问题 |
+| 参数估计 | 对可线性化的机理模型估计参数 | 半对数、双对数模型（弹性系数） |
+
+### 2.2 竞赛典型题目
+
+1. **影响因素分析类**（最常见）：如「分析影响某市空气质量的主要因素」「探究影响居民消费支出的因素」。套路：先画散点/算相关 → 用多元回归拟合 → 用 t 检验 + p 值筛出显著变量 → 按系数大小排序得到「主要影响因素」结论。
+2. **多变量预测类**：如「预测未来 5 年能源需求」。OLS 作为基准模型，与随机森林、神经网络对比，体现「由浅入深」。
+3. **机理补充类**：物理/经济模型经过对数化等变换变成线性形式，用 OLS 估计参数（如 Cobb–Douglas 生产函数的弹性）。
+
+### 2.3 使用前提（动手前检查清单）
+
+1. **线性近似成立**：画 $y$ 对每个 $x$ 的散点图、拟合后看残差-拟合图，无系统性弯曲。
+2. **样本量足够**：$n > p$ 是硬性要求（否则 $\boldsymbol{X}^T\boldsymbol{X}$ 不可逆，正规方程无唯一解）；经验法则 $n \ge 5p \sim 10p$，至少 $n \ge p+2$ 才能做 F 检验。
+3. **无严重共线性**：VIF &lt; 10 才敢解释单个系数；只想预测时可放宽，但标准误仍会膨胀。
+4. **残差近似独立、同方差、正态**：用第二节的残差图和 QQ 图检查。
+5. **因变量是连续变量**：$y$ 是分类变量时改用逻辑回归等。
+
+### 2.4 不适用情形
+
+| 情形 | 怎么办 |
+|------|--------|
+| 关系明显非线性（指数增长、饱和曲线、周期） | 多项式回归、变量变换（对数/倒数）、非线性最小二乘 |
+| 高维小样本 $n &lt; p$ 或 $n \approx p$ | 岭回归、Lasso、主成分回归 |
+| 严重共线性且目的是解释系数 | 剔除冗余变量、岭回归、主成分回归 |
+| 有强离群点、误差厚尾 | 先识别处理离群点，或稳健回归（Huber） |
+| 时间序列数据、误差自相关 | 时间序列模型（ARIMA 等），OLS 系数标准误会失真 |
+| $y$ 为 0/1 分类、计数、比例 | 逻辑回归、泊松回归、Beta 回归 |
+
+### 2.5 与邻近模型的选择
+
+- **多项式回归**：加 $x^2$、$x^3$ 项后**本质仍是线性模型**（对参数线性），正规方程照样解。注意高次项之间共线性会加剧，可先对 $x$ 中心化再平方。
+- **岭回归**：严重共线性但希望保留全部变量用于**预测**时选它——牺牲一点无偏性换取方差大幅下降（见第八节）。
+- **Lasso**：变量很多、想自动筛选重要变量时选它，能把不重要的系数压缩到 0。
+- **主成分回归（PCR）**：共线性强且想先降维再回归。
+- **决策树/随机森林/梯度提升**：只求预测精度、不要求解释系数时，通常精度更高，竞赛中常与 OLS 对比着写。
+- **逐步回归**：变量筛选的经典方法，但争议大（见第七节），竞赛中慎用或仅作辅助。
+
+---
+
+## 三、算法指标
+
+本节所有指标在第六节代码中均有手算实现与打印。先记约定：
+
+- $n$ 样本量，$p$ 特征个数（不含截距），参数总数 $k = p+1$；
+- 拟合值 $\hat y_i$，残差 $e_i = y_i - \hat y_i$；
+- 残差平方和 $RSS = \sum e_i^2$，总平方和 $TSS = \sum (y_i - \bar y)^2$，回归平方和 $ESS = \sum (\hat y_i - \bar y)^2 = TSS - RSS$。
+
+### 3.1 拟合优度
+
+**R²（决定系数）**
+
+$$ R^2 = 1 - \frac{RSS}{TSS} = \frac{ESS}{TSS} $$
+
+- 取值范围：含截距时为 $[0, 1]$（不含截距可能为负）。
+- 解读：$y$ 的变异中有多少比例被模型解释。$R^2 = 0.9$ 即「模型解释了 $y$ 90% 的波动」。
+- 三个坑：① 往模型里加任何变量 $R^2$ 都不会下降，故**不能**只用 $R^2$ 比不同变量个数的模型；② $R^2$ 高不等于模型好（可能过拟合）；③ $R^2$ 低不等于模型没用（宏观/社会数据 $R^2 \approx 0.3$ 可能已经很好了，要看学科惯例）。
+
+**调整 R²（Adjusted R²）**
+
+$$ \bar R^2 = 1 - (1 - R^2)\frac{n-1}{n-p-1} $$
+
+- 取值范围：$\bar R^2 \le R^2$，理论上可为负（模型极差时）。
+- 解读：对新增变量施加「自由度惩罚」，只有新增变量贡献足够大时才上升。**比较不同变量个数的模型时用调整 R²，不用 R²**。
+
+### 3.2 显著性检验
+
+**整体 F 检验**：检验 $H_0: \beta_1 = \beta_2 = \cdots = \beta_p = 0$（除截距外所有系数同时为 0）
+
+$$ F = \frac{ESS \,/\, p}{RSS \,/\, (n-p-1)} \sim F\big(p,\; n-p-1\big) $$
+
+- 取值范围：$F \ge 0$，越大越显著；对应 p 值 &lt; 0.05 即拒绝 $H_0$，认为「至少有一个自变量有效」。
+- 解读：F 显著但 $R^2$ 很小——样本量很大时常出现，说明模型有解释力但很弱；**F 显著、各系数都不显著**——共线性的典型症状（见第七节）。
+
+**系数 t 检验与 p 值**：检验 $H_0: \beta_j = 0$（单个系数是否为 0）
+
+$$ t_j = \frac{\hat\beta_j}{\mathrm{se}(\hat\beta_j)} \sim t(n-p-1), \qquad \mathrm{se}(\hat\beta_j) = \sqrt{\hat\sigma^2\,[(\boldsymbol{X}^T\boldsymbol{X})^{-1}]_{jj}}, \quad \hat\sigma^2 = \frac{RSS}{n-p-1} $$
+
+- 取值范围：$t \in (-\infty, +\infty)$；n 较大时经验法则 $|t| > 2$ 约等于 5% 显著。
+- p 值解读：$p &lt; 0.05$ 显著（打 \*）、$p &lt; 0.01$ 高度显著（打 \*\*）、$p &lt; 0.001$ 极显著（打 \*\*\*），竞赛论文按此标注。
+- 共线性下 $\mathrm{se}(\hat\beta_j)$ 被放大 $\sqrt{VIF_j}$ 倍 → $t$ 变小、p 变大 → 「明明重要却检验不显著」。
+
+**系数 95% 置信区间**
+
+$$ \hat\beta_j \pm t_{0.975}(n-p-1)\cdot \mathrm{se}(\hat\beta_j) $$
+
+- 含义：重复抽样 100 次，约 95 次区间能盖住真值。
+- 解读：区间**包含 0** ⇔ 该系数在 5% 水平不显著（与 p &lt; 0.05 等价）；区间越窄估计越精确。森林图（第四节图 4）就是画它。
+
+### 3.3 共线性诊断
+
+**VIF（方差膨胀因子，Variance Inflation Factor）**
+
+$$ VIF_j = \frac{1}{1 - R_j^2}, \qquad \mathrm{Var}(\hat\beta_j) = \sigma^2\,[(\boldsymbol{X}^T\boldsymbol{X})^{-1}]_{jj} = \frac{\sigma^2}{(n-1)S_{x_j}^2} \cdot VIF_j $$
+
+其中 $R_j^2$ 是把 $x_j$ 对其余 $p-1$ 个自变量回归得到的决定系数。
+
+- 取值范围：$VIF \ge 1$。
+- 阈值解读：$VIF = 1$ 完全无共线性；$1 &lt; VIF &lt; 5$ 轻度，可接受；$5 \le VIF \le 10$ 中度，需关注；**$VIF > 10$ 判定严重共线性**（严格者用 5），此时单个系数估计不可信。
+- 容忍度 $Tol_j = 1/VIF_j$，即「$x_j$ 中不被其他变量解释的比例」。
+- 注意：VIF 只度量**线性**相关；非线性相关要靠散点图。
+
+### 3.4 模型比较准则（AIC / BIC）
+
+$$ AIC = n\ln\!\Big(\frac{RSS}{n}\Big) + 2k, \qquad BIC = n\ln\!\Big(\frac{RSS}{n}\Big) + k\ln n, \quad k = p+1 $$
+
+- 取值范围：无界（可为负），**越小越好**，用于在候选模型之间择优。
+- 解读：第一项衡量拟合优劣，第二项惩罚复杂程度；BIC 的惩罚随 $n$ 增大更强，倾向选更精简的模型。
+- 注意：只能比较**同一份数据**（同 $n$、同 $y$）上的模型；不能跨样本、跨因变量比较。
+
+### 3.5 预测误差（RMSE / MAE）
+
+$$ RMSE = \sqrt{\frac{1}{n}\sum_{i=1}^{n} e_i^2}, \qquad MAE = \frac{1}{n}\sum_{i=1}^{n} |e_i| $$
+
+- 取值范围：$\ge 0$，单位与 $y$ 相同，越小越好。
+- 解读：RMSE 对**大误差更敏感**（平方放大离群点影响）；MAE 更稳健。两者差距悬殊说明存在离群点或厚尾。没有绝对的「好值」，要结合 $y$ 的量纲与业务精度判断（也可看相对指标 MAPE）。
+
+### 3.6 指标汇总表
+
+| 指标 | 中文名 | 公式 | 取值范围 / 阈值 | 解读要点 |
+|------|--------|------|-----------------|----------|
+| $R^2$ | 决定系数 | $1 - RSS/TSS$ | $[0,1]$ | 越接近 1 拟合越好；加变量必升，不能单独用于选模型 |
+| $\bar R^2$ | 调整 R² | $1 - (1-R^2)\frac{n-1}{n-p-1}$ | $\le R^2$ | 惩罚变量个数，比较不同规模模型用 |
+| $F$ | 整体 F 检验 | $\frac{ESS/p}{RSS/(n-p-1)}$ | $\ge 0$，p 值 &lt; 0.05 显著 | 至少一个自变量有效；与各 t 都不显著的矛盾提示共线性 |
+| $t_j$ | 系数 t 检验 | $\hat\beta_j / \mathrm{se}(\hat\beta_j)$ | 实数，$|t|>2$ 粗略显著 | 单个系数是否显著；共线性下变小 |
+| $p$ 值 | 显著性水平 | $2[1-F_t(|t_j|, n-p-1)]$ | $[0,1]$，&lt; 0.05 显著 | 越小证据越强：0.05/0.01/0.001 三档标注 |
+| 95% CI | 系数置信区间 | $\hat\beta_j \pm t_{0.975}\cdot \mathrm{se}$ | 实数区间 | 含 0 ⇔ 不显著；越窄越精确 |
+| $VIF_j$ | 方差膨胀因子 | $1/(1-R_j^2)$ | $\ge 1$，**>10 严重共线性** | 系数方差放大倍数；>5 应关注 |
+| AIC | 赤池信息准则 | $n\ln(RSS/n) + 2k$ | 无界，越小越好 | 模型比较，惩罚较轻 |
+| BIC | 贝叶斯信息准则 | $n\ln(RSS/n) + k\ln n$ | 无界，越小越好 | 模型比较，惩罚更重，选更简模型 |
+| RMSE | 均方根误差 | $\sqrt{\sum e_i^2 / n}$ | $\ge 0$，单位同 $y$ | 对大误差敏感，越小越好 |
+| MAE | 平均绝对误差 | $\sum |e_i| / n$ | $\ge 0$，单位同 $y$ | 稳健，越小越好；与 RMSE 差距大提示离群点 |
+
+---
+
+## 四、可视化图表
+
+### 4.1 六张图汇总（本文第六节代码全部绘制）
+
+| 图名 | 用途 | 关键解读点 |
+|------|------|-----------|
+| ① 实际值-预测值散点图（+对角线） | 检验整体预测精度 | 点越贴近 $y=\hat y$ 对角线拟合越好；整体高于/低于对角线说明有系统偏差；点云呈喇叭形说明异方差 |
+| ② 残差-拟合值散点图 | 检验线性与同方差假设 | 好图：残差围绕 0 随机均匀散布成一条**水平带**；异常：漏斗形（异方差）、弯曲（非线性，需加平方项）、个别孤立远点（离群点） |
+| ③ 残差 QQ 图 | 检验残差正态性（t/F 检验的前提） | 好图：点沿 45° 参考线排列；异常：两端翘起（厚尾）、整体 S 形弯曲（偏态） |
+| ④ 系数估计 ±95%CI 森林图 | 展示每个系数的估计值与不确定性 | 横线区间越窄估计越精确；区间跨过竖线 0 → 该系数不显著；共线性变量的区间明显更宽 |
+| ⑤ 特征相关性热力图 | 快速发现变量之间的共线性 | 非对角块颜色越深（$|r|$ 接近 1）相关越强；与图 ⑥ 配合：相关强 + VIF 大 → 共线性实锤 |
+| ⑥ VIF 柱状图 | 量化每个特征的共线性程度 | 柱高超过 VIF=10 红虚线即严重共线性，对应系数解释需谨慎；全部低于 5 则放心解释 |
+
+### 4.2 好图与异常图特征（诊断速查）
+
+**图① 实际-预测散点**：好图 = 点云沿对角线随机散布、宽度均匀；异常 = 点云偏离对角线（模型有偏）、越往右越散（异方差）、个别点远离对角线（预测失误样本，应回查原始数据）。
+
+**图② 残差-拟合散点**：好图 = 一条水平「毛毛虫」；异常三形态：**漏斗形**（残差幅度随 $\hat y$ 增大而增大 → 异方差，可对 $y$ 取对数）；**U 形弯曲**（→ 线性假设不成立，考虑加二次项）；**孤立远点**（→ 离群点，核实数据或做稳健回归）。图② 是 OLS 诊断中**最重要的一张图**。
+
+**图③ QQ 图**：好图 = 点基本贴在参考线上；异常：两端上翘（右厚尾，如收入类数据）、两端下垂（左厚尾）、整体弯曲（偏态）。轻微偏离在 n=200 时可容忍（t 检验对正态性有一定稳健性）。
+
+**图④ 森林图**：重点看横线是否跨过 0 和区间长短的对比。共线性变量的区间会「鹤立鸡群」地宽。
+
+**图⑤ 热力图**：一般 $|r| > 0.8$ 就值得警惕；但相关性只捕捉**两两**线性关系，VIF 捕捉**多重**线性关系，二者配合使用。
+
+**图⑥ VIF 柱状图**：超过红虚线 10 的柱子对应变量需要处理（剔除、合并、换岭回归/PCR）；5–10 之间的柱子要说明「中度共线性，解释系数时谨慎」。
+
+竞赛论文中一般**至少放图①②③**（模型诊断三件套），有共线性问题时补图⑤⑥，图④ 在需要展示各因素影响大小时放。
+
+---
+
+## 五、符号说明
+
+| 符号 | 含义 | 示例 / 单位 |
+|------|------|-------------|
+| $y_i$ | 第 $i$ 个样本的因变量（被解释变量） | 房价，万元 |
+| $x_{ij}$ | 第 $i$ 个样本第 $j$ 个自变量（解释变量） | 面积，m² |
+| $\boldsymbol{X}$ | 设计矩阵，$n \times (p+1)$，第一列全 1 | 200 行 × 5 列 |
+| $\boldsymbol{\beta}$ | 参数向量，$\beta_0$ 为截距 | $\beta = [5, 2, 3, 1.5, 0.8]^T$ |
+| $\hat{\boldsymbol{\beta}}$ | $\boldsymbol{\beta}$ 的最小二乘估计 | 由正规方程求出 |
+| $\boldsymbol{\varepsilon}$ | 随机误差向量（不可观测） | $\varepsilon \sim N(0, \sigma^2)$ |
+| $\boldsymbol{e}$ | 残差向量 $\boldsymbol{e} = \boldsymbol{y} - \hat{\boldsymbol{y}}$（可计算） | 残差 |
+| $\hat y_i$ | 拟合值（预测值） | $\hat y_i = \boldsymbol{x}_i^T \hat{\boldsymbol{\beta}}$ |
+| $\bar y$ | 因变量均值 | $\bar y = \frac{1}{n}\sum y_i$ |
+| $n$ | 样本量 | 200 |
+| $p$ | 特征个数（不含截距） | 4 |
+| $k$ | 参数总数 $k = p + 1$ | 5 |
+| $RSS$ | 残差平方和 $\sum e_i^2$ | 平方单位 |
+| $TSS$ | 总平方和 $\sum (y_i - \bar y)^2$ | 平方单位 |
+| $ESS$ | 回归平方和 $\sum (\hat y_i - \bar y)^2$ | 平方单位 |
+| $\sigma^2$ | 误差方差（真值，未知） | 2² = 4 |
+| $\hat\sigma^2$ | 误差方差无偏估计 $RSS/(n-p-1)$ | 由残差算出 |
+| $\mathrm{se}(\hat\beta_j)$ | 系数估计的标准误 | 越小估计越精确 |
+| $R^2$ / $\bar R^2$ | 决定系数 / 调整决定系数 | 无量纲，$[0,1]$ |
+| $F$ | 整体 F 检验统计量 | 无量纲 |
+| $t_j$ | 第 $j$ 个系数的 t 统计量 | 无量纲 |
+| $VIF_j$ | 第 $j$ 个变量的方差膨胀因子 | 无量纲，>10 严重 |
+| AIC / BIC | 赤池 / 贝叶斯信息准则 | 越小越好，仅用于模型比较 |
+| RMSE / MAE | 均方根误差 / 平均绝对误差 | 单位同 $y$ |
+| $\boldsymbol{H}$ | 帽子矩阵 $\boldsymbol{X}(\boldsymbol{X}^T\boldsymbol{X})^{-1}\boldsymbol{X}^T$ | $\hat{\boldsymbol{y}} = \boldsymbol{H}\boldsymbol{y}$ |
+
+---
+
+## 六、可运行程序（完整代码）
+
+说明：
+
+1. 以下所有代码块**按顺序拼接即为完整脚本**，直接保存为 `.py` 文件运行即可，无任何外部文件依赖。
+2. 依赖仅为 numpy、scipy、scikit-learn、matplotlib、pandas 五个库（未使用 statsmodels / seaborn）。
+3. 数据由 `np.random.seed(42)` 生成：$n = 200$，4 个特征，其中 x1 与 x2 共享公共因子、几乎完全共线（相关系数约 0.9995，VIF 高达 1100+）以制造严重共线性；真实模型 $y = 5 + 2x_1 + 3x_2 + 1.5x_3 + 0.8x_4 + \varepsilon$，$\varepsilon \sim N(0, 2^2)$。如此极端是为了**放大演示效果**：第七节你将看到 x2 的估计系数直接反号。
+4. 程序输出：控制台打印第三节提到的**全部指标**（手算）；`figures/` 目录保存第四节要求的**全部 6 张图**（文件名前缀 `mlr_`），同时 `plt.show()` 弹窗显示。
+
+```python
+# -*- coding: utf-8 -*-
+# =============================================================================
+# 多元线性回归完整实现：手写（正规方程 + 全指标手算）与 sklearn 对照
+# 依赖：numpy / scipy / scikit-learn / matplotlib / pandas（无 statsmodels）
+# 数据：np.random.seed(42) 合成数据，n=200，4 个特征（x1、x2 高度相关制造共线性）
+#       真实模型 y = 5 + 2*x1 + 3*x2 + 1.5*x3 + 0.8*x4 + eps,  eps ~ N(0, 2^2)
+# 输出：控制台打印全部指标；figures/ 目录保存 6 张诊断图（前缀 mlr_）
+# 运行：python 本文件.py
+# =============================================================================
+import os
+import numpy as np
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+from scipy import stats
+from sklearn.linear_model import LinearRegression
+
+# ========== 中文显示设置（必须在任何绘图代码之前执行） ==========
+plt.rcParams["font.sans-serif"] = ["PingFang SC", "Arial Unicode MS", "SimHei"]
+plt.rcParams["axes.unicode_minus"] = False
+```
+
+```python
+# ========== 1. 生成合成数据 ==========
+np.random.seed(42)                    # 固定随机种子，保证结果完全可复现
+n = 200                               # 样本量
+
+# x1 与 x2 共享公共因子 base -> 二者几乎完全共线（corr≈0.9995），用于制造严重共线性
+base = np.random.randn(n)
+x1 = base + 0.02 * np.random.randn(n)   # 公共因子 + 极少量个体噪声
+x2 = base + 0.02 * np.random.randn(n)
+x3 = np.random.randn(n)                 # 与其余特征独立的特征
+x4 = 2.0 * np.random.rand(n) + 1.0      # [1, 3] 上的均匀分布特征
+
+beta_true = np.array([5.0, 2.0, 3.0, 1.5, 0.8])   # 真实系数（第 1 个是截距）
+X_raw = np.column_stack([x1, x2, x3, x4])         # n×4 特征矩阵
+X = np.column_stack([np.ones(n), X_raw])          # n×5 设计矩阵（第 1 列全 1 对应截距）
+eps = 2.0 * np.random.randn(n)                    # 噪声 eps ~ N(0, 2^2)
+y = X @ beta_true + eps                           # 真实数据生成过程
+
+df = pd.DataFrame(X_raw, columns=["x1", "x2", "x3", "x4"])
+df["y"] = y
+print("=" * 68)
+print("【0】数据信息")
+print(f"  样本量 n = {n}，特征数 p = {X_raw.shape[1]}（不含截距）")
+print("  真实模型：y = 5 + 2·x1 + 3·x2 + 1.5·x3 + 0.8·x4 + eps,  eps ~ N(0, 2^2)")
+print("  特征相关系数矩阵（注意 x1 与 x2 之间的高相关）：")
+print(np.round(df.corr().iloc[:4, :4], 4))
+```
+
+```python
+# ========== 2. 手写实现：正规方程求解 β̂ = (XᵀX)⁻¹ Xᵀ y ==========
+XtX = X.T @ X
+Xty = X.T @ y
+beta_hat = np.linalg.solve(XtX, Xty)   # 解线性方程组，等价于 inv(XᵀX) @ Xᵀy 但更稳定
+print("\n" + "=" * 68)
+print("【1】系数估计（正规方程）")
+print("  真实系数 beta_true =", beta_true)
+print("  手写估计 beta_hat  =", np.round(beta_hat, 4))
+```
+
+```python
+# ========== 3. sklearn LinearRegression 对照 ==========
+reg = LinearRegression()               # 默认 fit_intercept=True，与手写第 1 列截距对应
+reg.fit(X_raw, y)                      # 注意：只喂 4 列特征，截距由 sklearn 自己加
+beta_sk = np.concatenate([[reg.intercept_], reg.coef_])
+diff = np.max(np.abs(beta_hat - beta_sk))
+print("\n【2】sklearn 对照")
+print("  sklearn 估计        =", np.round(beta_sk, 4))
+print(f"  手写与 sklearn 最大差异 = {diff:.2e}  ->  " +
+      ("完全一致" if diff &lt; 1e-8 else "存在差异，请检查代码"))
+```
+
+```python
+# ========== 4. 手算第三节全部指标 ==========
+y_hat = X @ beta_hat                  # 拟合值
+resid = y - y_hat                     # 残差
+p_full = X.shape[1]                   # 含截距的参数个数 = 5
+m = X_raw.shape[1]                    # 特征个数 = 4
+df_res = n - p_full                   # 残差自由度 = 195
+
+sse = resid @ resid                   # RSS 残差平方和
+sst = ((y - y.mean()) ** 2).sum()     # TSS 总平方和
+ssr = sst - sse                       # ESS 回归平方和
+sigma2 = sse / df_res                 # 误差方差无偏估计 σ̂²
+sigma_hat = np.sqrt(sigma2)           # 残差标准误 σ̂
+
+# ---- 4.1 拟合优度：R² 与调整 R² ----
+r2 = 1 - sse / sst
+adj_r2 = 1 - (1 - r2) * (n - 1) / (n - p_full)
+
+# ---- 4.2 整体 F 检验：H0: β1=...=βp=0 ----
+f_stat = (ssr / m) / (sse / df_res)                  # F ~ F(m, n-p-1)
+f_p = 1 - stats.f.cdf(f_stat, m, df_res)             # F 检验 p 值
+
+# ---- 4.3 系数 t 检验与 95% 置信区间 ----
+cov_beta = sigma2 * np.linalg.inv(XtX)               # Var(β̂) = σ̂² (XᵀX)⁻¹
+se = np.sqrt(np.diag(cov_beta))                      # 标准误 se(β̂_j)
+t_stats = beta_hat / se                              # t_j = β̂_j / se(β̂_j)
+t_p = 2 * (1 - stats.t.cdf(np.abs(t_stats), df_res)) # 双侧 p 值
+t_crit = stats.t.ppf(0.975, df_res)                  # t_{0.975}(195) ≈ 1.972
+ci_lo = beta_hat - t_crit * se                       # 置信区间下界
+ci_hi = beta_hat + t_crit * se                       # 置信区间上界
+
+# ---- 4.4 VIF：把每个 x_j 对其余特征回归，VIF_j = 1/(1-R_j^2) ----
+vif = np.zeros(m)
+for j in range(m):
+    xj = X_raw[:, j]
+    X_other = X[:, [0] + [k + 1 for k in range(m) if k != j]]   # 截距 + 其余特征
+    bj = np.linalg.solve(X_other.T @ X_other, X_other.T @ xj)   # 辅助回归的系数
+    ej = xj - X_other @ bj                                      # 辅助回归的残差
+    r2j = 1 - (ej @ ej) / ((xj - xj.mean()) ** 2).sum()         # 辅助回归 R²
+    vif[j] = 1.0 / (1.0 - r2j)
+
+# ---- 4.5 AIC / BIC（k = p+1 个参数，含截距） ----
+aic = n * np.log(sse / n) + 2 * p_full
+bic = n * np.log(sse / n) + p_full * np.log(n)
+
+# ---- 4.6 RMSE / MAE ----
+rmse = np.sqrt(sse / n)
+mae = np.mean(np.abs(resid))
+```
+
+```python
+# ========== 5. 打印全部指标 ==========
+names = ["截距"] + [f"x{i+1}" for i in range(m)]
+table = pd.DataFrame({
+    "变量": names,
+    "真实系数": beta_true,
+    "手写β̂": np.round(beta_hat, 3),
+    "sklearnβ̂": np.round(beta_sk, 3),
+    "标准误": np.round(se, 3),
+    "t 值": np.round(t_stats, 2),
+    "p 值": [f"{v:.4g}" if v >= 0.0001 else "&lt;0.0001" for v in t_p],
+    "95%置信区间": [f"[{lo:.2f}, {hi:.2f}]" for lo, hi in zip(ci_lo, ci_hi)],
+    "VIF": ["—"] + [f"{v:.1f}" for v in vif],
+    "显著?": ["—"] + ["是" if v &lt; 0.05 else "否" for v in t_p[1:]],
+})
+print("\n【3】系数显著性检验结果")
+print(table.to_string(index=False))
+
+print("\n【4】拟合优度")
+print(f"  R² = {r2:.4f}    调整R² = {adj_r2:.4f}")
+print(f"  残差标准误 σ̂ = {sigma_hat:.3f}（真实噪声 σ = 2.0）")
+
+print("\n【5】整体显著性（F 检验）")
+f_p_str = "&lt;1e-300（浮点下溢）" if f_p == 0 else f"{f_p:.2e}"
+print(f"  F = {f_stat:.2f}，p 值 = {f_p_str}  ->  " +
+      ("模型整体显著（至少一个自变量有效）" if f_p &lt; 0.05 else "模型整体不显著"))
+
+print("\n【6】共线性诊断（VIF）")
+print("  " + "  ".join([f"VIF({nm}) = {v:.1f}" for nm, v in zip(names[1:], vif)]))
+worst = int(np.argmax(vif)) + 1
+print(f"  共线性最严重：x{worst}，VIF = {vif[worst-1]:.1f}" +
+      ("，超过 10，严重共线性，单个系数估计不可信！" if vif[worst-1] > 10 else "，处于可接受范围。"))
+
+print("\n【7】模型比较准则")
+print(f"  AIC = {aic:.2f}    BIC = {bic:.2f}   （仅用于同一数据不同模型的比较，越小越好）")
+
+print("\n【8】预测误差")
+print(f"  RMSE = {rmse:.4f}    MAE = {mae:.4f}   （单位与 y 相同，越小越好）")
+```
+
+```python
+# ========== 6. 绘制 6 张诊断图（保存到 figures/，文件名前缀 mlr_） ==========
+os.makedirs("figures", exist_ok=True)          # 创建图片输出目录
+
+def save_show(fig, fname):
+    """保存图片到 figures/ 并显示；无图形界面环境（服务器）自动跳过弹窗。"""
+    fig.savefig(os.path.join("figures", fname), dpi=150, bbox_inches="tight")
+    if matplotlib.get_backend().lower() != "agg":   # 无界面时 show 为空操作
+        plt.show()
+    plt.close(fig)
+    print(f"  已保存 figures/{fname}")
+
+# ---- 图1：实际值 vs 预测值散点（+ 对角线） ----
+fig, ax = plt.subplots(figsize=(6, 5))
+ax.scatter(y, y_hat, s=20, alpha=0.65, edgecolors="white", linewidths=0.4, label="样本点")
+lims = [min(y.min(), y_hat.min()) - 0.5, max(y.max(), y_hat.max()) + 0.5]
+ax.plot(lims, lims, "r--", lw=2, label="对角线 y = ŷ（完美预测）")
+ax.set_xlabel("实际值 y")
+ax.set_ylabel("预测值 ŷ")
+ax.set_title(f"图1 实际值 vs 预测值散点图（R² = {r2:.3f}）")
+ax.legend()
+save_show(fig, "mlr_actual_pred.png")
+
+# ---- 图2：残差-拟合值散点（检验线性与同方差假设） ----
+fig, ax = plt.subplots(figsize=(6, 5))
+ax.scatter(y_hat, resid, s=20, alpha=0.65, edgecolors="white", linewidths=0.4)
+ax.axhline(0, color="red", ls="--", lw=1.5, label="零残差参考线")
+ax.set_xlabel("拟合值 ŷ")
+ax.set_ylabel("残差 e = y − ŷ")
+ax.set_title("图2 残差-拟合值散点图（好图：均匀水平带）")
+ax.legend()
+save_show(fig, "mlr_residual_fitted.png")
+
+# ---- 图3：残差 QQ 图（检验正态性） ----
+fig, ax = plt.subplots(figsize=(6, 5))
+(osm, osr), (slope, intercept, r_qq) = stats.probplot(resid, dist="norm", plot=ax, rvalue=True)
+ax.set_xlabel("标准正态理论分位数")
+ax.set_ylabel("残差样本分位数")
+ax.set_title(f"图3 残差 QQ 图（与直线的相关系数 = {r_qq:.4f}）")
+save_show(fig, "mlr_residual_qq.png")
+
+# ---- 图4：系数估计 ±95% 置信区间森林图 ----
+fig, ax = plt.subplots(figsize=(7, 5))
+pos = np.arange(p_full)[::-1]                  # 截距放在最上面
+ax.errorbar(beta_hat, pos, xerr=[beta_hat - ci_lo, ci_hi - beta_hat],
+            fmt="o", ms=6, capsize=5, ecolor="steelblue", elinewidth=1.8,
+            color="navy", lw=0)
+ax.axvline(0, color="gray", ls="--", lw=1, label="0（不显著分界线）")
+ax.set_yticks(pos)
+ax.set_yticklabels(names)
+ax.set_xlabel("系数估计值（横线为 95% 置信区间）")
+ax.set_title("图4 系数估计 ±95% 置信区间（森林图）")
+ax.legend(loc="lower right")
+save_show(fig, "mlr_coef_ci.png")
+
+# ---- 图5：特征相关性热力图 ----
+fig, ax = plt.subplots(figsize=(6, 5))
+corr = np.corrcoef(X_raw, rowvar=False)
+im = ax.imshow(corr, cmap="RdBu_r", vmin=-1, vmax=1)
+ax.set_xticks(np.arange(m))
+ax.set_xticklabels(["x1", "x2", "x3", "x4"])
+ax.set_yticks(np.arange(m))
+ax.set_yticklabels(["x1", "x2", "x3", "x4"])
+for i in range(m):
+    for j in range(m):
+        ax.text(j, i, f"{corr[i, j]:.3f}", ha="center", va="center", fontsize=11,
+                color="black" if abs(corr[i, j]) &lt; 0.6 else "white")
+fig.colorbar(im, ax=ax, shrink=0.85, label="相关系数 r")
+ax.set_title("图5 特征相关性热力图")
+save_show(fig, "mlr_corr_heatmap.png")
+
+# ---- 图6：VIF 柱状图 ----
+fig, ax = plt.subplots(figsize=(6, 5))
+bar_colors = ["#d62728" if v > 10 else "#2ca02c" for v in vif]   # 超阈值红，正常绿
+bars = ax.bar([f"x{i+1}" for i in range(m)], vif, color=bar_colors, width=0.55)
+ax.axhline(10, color="red", ls="--", lw=1.5, label="VIF = 10 警戒线")
+for bar, v in zip(bars, vif):
+    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.3,
+            f"{v:.1f}", ha="center", fontsize=11)
+ax.set_ylim(0, vif.max() * 1.25)
+ax.set_ylabel("VIF")
+ax.set_title("图6 方差膨胀因子（VIF）柱状图")
+ax.legend()
+save_show(fig, "mlr_vif_bar.png")
+```
+
+```python
+# ========== 7. 结论速览（本程序演示的要点） ==========
+print("\n" + "=" * 68)
+print("【9】结论速览（共线性演示）")
+print(f"  1. x1、x2 高度相关（VIF ≈ {vif[0]:.1f}），但模型整体 R² = {r2:.3f} 仍然很高：")
+print("     共线性不影响整体拟合与预测，只破坏单个系数的解释。")
+print(f"  2. 对比 x1、x2 与 x3、x4 的标准误：{se[1]:.3f}、{se[2]:.3f} vs {se[3]:.3f}、{se[4]:.3f}，")
+print("     共线性变量的标准误被 VIF 放大，t 变小、p 变大，本例 x2 的系数甚至反号（符号失真）。")
+print(f"  3. x3、x4 无共线性，估计值与真实值（1.5、0.8）几乎重合，检验高度显著。")
+print("  4. 手写实现与 sklearn 结果一致，说明正规方程推导与代码无误。")
+print("=" * 68)
+```
+
+### 6.1 运行方式与预期输出
+
+在终端执行（本机 venv 环境）：
+
+```bash
+cd /Volumes/phionx/数学建模/algorithm
+.venv/bin/python 02_多元线性回归_代码.py
+```
+
+预期输出为：【0】数据信息 →【1】手写系数 →【2】sklearn 对照 →【3】系数显著性检验结果表 →【4】拟合优度 →【5】F 检验 →【6】VIF →【7】AIC/BIC →【8】RMSE/MAE → 6 张图保存提示 →【9】结论速览。完整输出与逐项解读见第七节。
+
+---
+
+## 七、结果解读与注意事项
+
+### 7.1 以本程序输出为例的完整解读
+
+（以下数值为 `np.random.seed(42)`、$n=200$ 下的真实运行结果，读者运行第六节代码可逐项复现核对。）
+
+**【0】数据信息**：特征相关矩阵中 $r(x_1, x_2) = 0.9995$，其余特征之间的相关都在 $\pm 0.1$ 以内。x1、x2 几乎完全共线——这是人为埋下的「共线性陷阱」，也是本节演示的主角。
+
+**【1】-【2】系数估计**：手写正规方程与 sklearn 给出的系数完全一致（最大差异 $1.6\times10^{-12}$，纯浮点误差），说明手写实现正确。与真实系数 $[5,\ 2,\ 3,\ 1.5,\ 0.8]$ 对比：
+
+- 截距 4.595（真值 5）、x3 = 1.553（真值 1.5）、x4 = 1.123（真值 0.8）：估计准确；
+- x1 = 6.855（真值 2，高估 3.4 倍）、**x2 = −2.078（真值 +3，符号直接反了！）**：完全失真。
+
+**【3】显著性检验结果表**：这是全表信息量最大的一块。
+
+- x3、x4：标准误仅 0.137 / 0.231，$t = 11.37$ / $4.86$，p 值远小于 0.001 / 约 $2.4\times10^{-6}$，置信区间窄且不含 0 → 高度显著，估计可信。
+- x1、x2：标准误 4.934 / 4.959，约为 x3 的 **36 倍**；$t = 1.39$ / $-0.42$，$p = 0.166$ / $0.676$，都不显著；95% 置信区间 $[-2.87,\ 16.59]$ 与 $[-11.86,\ 7.70]$——极宽、横跨 0 甚至横跨正负号。
+- 矛盾组合出现：整体 F 极显著（见【5】），但两个「理论上重要」的变量各自都不显著。**「F 显著 + 各 t 不显著」是共线性的标志性症状**。
+
+**【4】拟合优度**：$R^2 = 0.8632$，调整 $R^2 = 0.8604$，两者几乎相同（4 个变量都「物有所值」）；残差标准误 $\hat\sigma = 1.936$，与真实噪声 $\sigma = 2.0$ 非常接近——模型把能解释的都解释了。**共线性不影响整体拟合**。
+
+**【5】F 检验**：$F = 307.56$，p 值小于 $10^{-60}$，模型整体高度显著。
+
+**【6】VIF**：$VIF(x_1) = 1125.2$、$VIF(x_2) = 1125.8$，远超 10 的警戒线（严重共线性）；$VIF(x_3) = VIF(x_4) = 1.0$，完全无共线性。图 6 中 x1、x2 两根红色柱子的高度一眼可见。
+
+**【7】AIC/BIC**：$AIC = 269.17$、$BIC = 285.66$。单独看无意义，要在候选模型之间比较（例如与删去 x2 的三变量模型比 BIC）。
+
+**【8】RMSE/MAE**：$RMSE = 1.912$、$MAE = 1.486$，与真实噪声 $\sigma = 2$ 接近（理想情况下 RMSE ≈ σ），说明预测误差基本就是不可消除的噪声，没有过拟合。
+
+**六张图的解读**：图 1 点云紧密贴住对角线（$R^2 = 0.86$）；图 2 残差呈均匀水平带、图 3 点贴直线——同方差与正态假设成立（数据就是这样生成的）；图 4 森林图中 x1、x2 的置信区间「鹤立鸡群」地宽且跨过 0；图 5 热力图 x1–x2 格子深红（0.999）；图 6 中 x1、x2 的柱子远超 10 的红色虚线。
+
+### 7.2 共线性如何「骗人」：系数符号失真演示
+
+为什么 $x_1$、$x_2$ 的系数会失真甚至反号？机制如下：
+
+1. **数据里只有「和」的信息**：$x_1 \approx x_2$（$r = 0.9995$）时，样本几乎都落在 $x_1 \approx x_2$ 这条线上，模型只能看清组合 $x_1 + x_2$ 的总效应（真值之和 $2 + 3 = 5$），无法区分各自贡献。实测 $\hat\beta_1 + \hat\beta_2 = 6.855 - 2.078 = 4.777 \approx 5$——**和是对的，个体是乱的**。
+2. **方差被 VIF 放大**：$\mathrm{Var}(\hat\beta_j) = \sigma^2 VIF_j \,/\, \sum (x_{ij} - \bar x_j)^2$。VIF ≈ 1125 意味着方差被放大 1125 倍，标准误放大 $\sqrt{1125} \approx 33.5$ 倍——x1、x2 的标准误（≈4.9）恰好是 x3 的（0.137）约 36 倍。
+3. **估计之间高度负相关**：一个偏高另一个就偏低，个体估计可以在真值附近大幅摆动。本例 $\hat\beta_2 = -2.08$ 而真值为 $+3$，**符号直接反了**；$\hat\beta_1 = 6.86$ 高估 3.4 倍。若论文据此写「x2 对 y 有负向影响」，就是被数据陷阱欺骗了。
+4. **预测毫发无损**：$R^2 = 0.863$、$RMSE = 1.91$ 都很好——共线性坑的是「解释」，不是「预测」。
+
+处理办法：剔除高度相关变量之一、用岭回归（牺牲无偏换稳定）、或主成分回归（用不相关的 PC 替代原始变量）。竞赛论文中**必须**报告 VIF 并说明处理方式，否则评委可能质疑结论。
+
+> 说明：本文故意用 $r \approx 0.9995$、$VIF \approx 1125$ 的极端案例放大演示效果。实际数据中 $VIF > 10$（严格标准 > 5）就应警惕，系数失真不需要如此极端才会发生。
+
+### 7.3 常见坑（竞赛中高频翻车点）
+
+1. **共线性不诊断就解释系数**：先算 VIF，>10 时不要解释单个系数，或换模型。
+2. **标准化（Z-score）何时需要**：① 想比较量纲不同的系数大小时需要标准化（如「GDP 每亿元」vs「人口每万人」的影响不可直接比）；② 岭回归、Lasso、PCR **必须**先标准化（惩罚项对量纲敏感）；③ 纯 OLS 预测不需要；④ 虚拟变量一般不标准化。
+3. **逐步回归的争议**：逐步回归（向前/向后）通过反复 t 检验加删变量，存在数据窥探（data snooping）问题——p 值被反复使用而失真、入选变量依赖随机波动、模型不稳定（换一批数据结果不同）、系数有偏。竞赛中**可以用但不建议作为主模型**，更推荐理论驱动选变量，或用 Lasso 自动筛选后人工复核。
+4. **虚拟变量（哑变量）处理**：分类变量有 $c$ 个类别时，应放入 $c-1$ 个 0/1 哑变量（基准类全 0）；放满 $c$ 个会与截距完全共线（「虚拟变量陷阱」），导致 $X^TX$ 不可逆。论文中要说明基准类是谁。
+5. **变量遗漏（遗漏变量偏差 OVB）**：遗漏了与已含变量相关的重要变量，会使已含变量的系数有偏且不一致。例如研究「教育年限对收入的影响」却漏掉「能力」，教育系数会被高估。对策：结合文献与领域知识尽量纳入控制变量。
+6. **相关 ≠ 因果**：回归系数显著只能说「伴随关系」，不能说「x 导致 y」。论文措辞用「相关」「伴随」「与……有关联」，因果结论必须靠实验、工具变量、断点回归等额外设计支撑。
+7. **外推风险**：用训练范围之外的自变量取值预测，结果不可靠；论文中应声明预测范围。
+8. **异常值与高杠杆点**：个别点可能撬动整条回归线，可计算帽子矩阵对角元 $h_{ii}$ 与 Cook 距离识别，并在论文中说明是否剔除（剔除要给出理由）。
+
+### 7.4 竞赛论文写作话术模板
+
+**模型建立段**
+
+> 记第 $i$ 个样本的因变量为 $y_i$，$p$ 个影响因素为 $x_{i1}, \dots, x_{ip}$。假设 $y$ 与各因素之间满足线性关系，建立多元线性回归模型：
+> $$ y_i = \beta_0 + \beta_1 x_{i1} + \cdots + \beta_p x_{ip} + \varepsilon_i, \quad \varepsilon_i \sim N(0, \sigma^2) $$
+> 采用最小二乘法估计参数，解得 $\hat{\boldsymbol{\beta}} = (\boldsymbol{X}^T\boldsymbol{X})^{-1}\boldsymbol{X}^T\boldsymbol{y}$，使用 Python 求解。
+
+**显著性检验段**
+
+> 对模型进行整体 F 检验，$F = \underline{\quad}$，对应 p 值 $&lt; 0.001$，拒绝原假设，说明回归方程整体显著，即各影响因素联合对因变量具有显著解释作用，模型拟合优度 $R^2 = \underline{\quad}$，调整 $R^2 = \underline{\quad}$，解释能力较强。对各系数逐一进行 t 检验：$x_1$（$t = \underline{\quad}$，$p &lt; 0.01$）、$x_2$（$t = \underline{\quad}$，$p &lt; 0.05$）在 0.05 显著性水平下显著；$x_3$（$p = \underline{\quad} > 0.05$）不显著，予以剔除后重新拟合。
+
+**共线性诊断段**
+
+> 计算各变量的方差膨胀因子 VIF。结果显示 $x_1$、$x_2$ 的 VIF 分别为 $\underline{\quad}$、$\underline{\quad}$，均大于 10，存在严重多重共线性。为消除共线性影响，本文采用岭回归（/剔除变量 $x_2$/主成分回归）对模型进行改进，改进后各变量 VIF 均降至 10 以下。
+
+**模型诊断段**
+
+> 绘制残差-拟合值散点图与残差 QQ 图进行模型诊断：残差围绕零线呈随机水平带状分布，无漏斗形与弯曲趋势，说明同方差与线性假设成立；QQ 图中样本点基本沿参考直线排列，残差近似服从正态分布，满足最小二乘推断的前提假设。模型残差均方根误差 RMSE 为 $\underline{\quad}$，预测效果良好。
+
+**局限性段**
+
+> 本文模型基于线性假设，对变量间的非线性关系与交互作用考虑有限；同时样本量 $\underline{\quad}$ 有限，参数估计存在不确定性。后续可引入随机森林等非线性模型对比，并扩大样本进一步验证结论的稳健性。
+
+---
+
+## 八、延伸阅读
+
+学完 OLS 后，沿「问题 → 升级方案」的路线继续深入：
+
+1. **岭回归（Ridge Regression）**：在损失函数上加 L2 惩罚项 $\min_{\beta} \|\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta}\|^2 + \lambda\|\boldsymbol{\beta}\|^2$，闭式解 $\hat{\boldsymbol{\beta}}_{ridge} = (\boldsymbol{X}^T\boldsymbol{X} + \lambda \boldsymbol{I})^{-1}\boldsymbol{X}^T\boldsymbol{y}$。$\lambda > 0$ 使 $X^TX$ 「加一道保险」可逆，专门应对共线性：以一点有偏为代价，把系数方差大幅降下来。注意要先标准化。
+2. **Lasso（Least Absolute Shrinkage and Selection Operator）**：把惩罚换成 L1 范数 $\min_{\beta} \|\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta}\|^2 + \lambda\sum|\beta_j|$。L1 的「尖角」性质能把不重要系数**精确压缩为 0**，兼做变量选择，是高维数据的利器；与岭回归的结合体叫弹性网（Elastic Net）。
+3. **主成分回归（PCR）**：先对 $X$ 做主成分分析（PCA），取前几个主成分（彼此正交、无共线性）再做 OLS。优点：彻底摆脱共线性、降维去噪；缺点：主成分是原始变量的线性组合，可解释性下降。
+4. **逐步回归（Stepwise Regression）**：向前选择（逐个加入最显著变量）、向后剔除（逐个剔除最不显著变量）、双向逐步。计算简单、论文中常见，但存在数据窥探与模型不稳定问题（见 7.3 第 3 条），建议与 Lasso、领域知识交叉验证结果。
+
+四条升级路线的选择口诀：**要解释就治共线性（岭回归/删变量），要降维就 PCR，要选变量就 Lasso，逐步回归只作参考。** 竞赛中常见组合：先用 OLS + VIF 诊断问题，再按问题选升级方案，最后与随机森林等非线性模型对比预测精度，形成完整的「模型族」叙事。
+
+---
+
+> 本文档为数学建模竞赛算法学习系列第 02 篇。配套代码可直接运行复现文中全部数值与图片。</span></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/pomili/docs-site/tree/main/docs/algo/02_多元线性回归.mdx target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href=/en/docs/algo/一元线性回归><div class=pagination-nav__sublabel>Previous</div><div class=pagination-nav__label>一元线性回归</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/en/docs/algo/多项式回归><div class=pagination-nav__sublabel>Next</div><div class=pagination-nav__label>多项式回归</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#一算法含义 class="table-of-contents__link toc-highlight">一、算法含义</a><ul><li><a href=#11-一句话理解 class="table-of-contents__link toc-highlight">1.1 一句话理解</a><li><a href=#12-数学模型标量与矩阵形式 class="table-of-contents__link toc-highlight">1.2 数学模型（标量与矩阵形式）</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class=footer__title>文档</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/en/docs/intro>快速开始</a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>社区</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://docusaurus.io/ target=_blank rel="noopener noreferrer" class=footer__link-item>Docusaurus 官网<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><li class=footer__item><a href=https://github.com/facebook/docusaurus target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>更多</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/en/blog>博客</a><li class=footer__item><a href=https://github.com/pomili/docs-site target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div></div><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 Built with Docusaurus.</div></div></div></footer></div></body>

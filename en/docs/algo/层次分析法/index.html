@@ -1,0 +1,722 @@
+<!doctype html><html lang=en dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-algo/层次分析法" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.1"><title data-rh=true>层次分析法 | pomili</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://pomili.github.io/en/img/docusaurus-social-card.jpg /><meta data-rh=true name=twitter:image content=https://pomili.github.io/en/img/docusaurus-social-card.jpg /><meta data-rh=true property=og:url content=https://pomili.github.io/en/docs/algo/层次分析法 /><meta data-rh=true property=og:locale content=en /><meta data-rh=true property=og:locale:alternate content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=en /><meta data-rh=true name=docsearch:language content=en /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="层次分析法 | pomili"/><meta data-rh=true name=description content='层次分析法（Analytic Hierarchy Process, AHP）是美国运筹学家 T. L. Saaty 于 20 世纪 70 年代提出的一种多准则决策方法。它把"选哪个方案最好"这类复杂决策问题分解成目标—准则—方案三个层次，用两两比较的方式把专家的主观判断量化成判断矩阵，再通过特征值方法求出各要素的权重，最后综合排序给出决策建议。AHP 是数学建模竞赛中评价类题目的"标配"方法之一：原理直观、不需要数据、计算量小，特别适合"评优、评选、选址、定权"这一类问题。本文从原理、适用场景、评价指标、可视化图表到可运行代码，完整梳理 AHP 的竞赛实战用法。'/><meta data-rh=true property=og:description content='层次分析法（Analytic Hierarchy Process, AHP）是美国运筹学家 T. L. Saaty 于 20 世纪 70 年代提出的一种多准则决策方法。它把"选哪个方案最好"这类复杂决策问题分解成目标—准则—方案三个层次，用两两比较的方式把专家的主观判断量化成判断矩阵，再通过特征值方法求出各要素的权重，最后综合排序给出决策建议。AHP 是数学建模竞赛中评价类题目的"标配"方法之一：原理直观、不需要数据、计算量小，特别适合"评优、评选、选址、定权"这一类问题。本文从原理、适用场景、评价指标、可视化图表到可运行代码，完整梳理 AHP 的竞赛实战用法。'/><link data-rh=true rel=icon href=/en/img/logo.png /><link data-rh=true rel=canonical href=https://pomili.github.io/en/docs/algo/层次分析法 /><link data-rh=true rel=alternate href=https://pomili.github.io/docs/algo/层次分析法 hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://pomili.github.io/en/docs/algo/层次分析法 hreflang=en /><link data-rh=true rel=alternate href=https://pomili.github.io/docs/algo/层次分析法 hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://pomili.github.io/en/docs/algo/","name":"数学建模算法学习文档","position":1},{"@type":"ListItem","item":"https://pomili.github.io/en/docs/algo/层次分析法","name":"层次分析法","position":2}]}</script><link rel=alternate type=application/rss+xml href=/en/blog/rss.xml title="pomili RSS Feed"><link rel=alternate type=application/atom+xml href=/en/blog/atom.xml title="pomili Atom Feed"><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNHUKE2NxJT5GJEnGkl1zWJNGHSwE3BnADklYp+1MGU6YDpkLp5QhB6 crossorigin=anonymous><link rel=stylesheet href=/en/assets/css/styles.b6024cf9.css /><script src=/en/assets/js/runtime~main.b2a77779.js defer></script><script src=/en/assets/js/main.0e397aaf.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-5cc")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/en/img/logo.png /><div role=region aria-label="Skip to main content"><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>Skip to main content</a></div><nav aria-label=Main class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/en/><div class=navbar__logo><img src=/en/img/logo.png alt=pomili class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/en/img/logo.png alt=pomili class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">pomili</b></a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/en/docs/intro>文档</a><a class="navbar__item navbar__link" href=/en/blog>博客</a><a class="navbar__item navbar__link" href=/en/drone>无人机</a><a class="navbar__item navbar__link" href=/en/tools>工具</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/pomili/docs-site target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/intro><span title=欢迎 class=linkLabel_WmDU>欢迎</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/cmake-stm32><span title="CMake 构建 STM32 程序" class=linkLabel_WmDU>CMake 构建 STM32 程序</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/en/docs/cubemx2/><span title="STM32CubeMX2 文档" class=categoryLinkLabel_W154>STM32CubeMX2 文档</span></a><button aria-label="Expand sidebar category 'STM32CubeMX2 文档'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/deploy-docusaurus><span title="部署 Docusaurus" class=linkLabel_WmDU>部署 Docusaurus</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/docusaurus-guide><span title="Docusaurus 使用指南" class=linkLabel_WmDU>Docusaurus 使用指南</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/en/docs/ml/><span title=机器学习专题 class=categoryLinkLabel_W154>机器学习专题</span></a><button aria-label="Expand sidebar category '机器学习专题'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/how-to-write-sci><span title="如何撰写 SCI 论文" class=linkLabel_WmDU>如何撰写 SCI 论文</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/esp32-web-provisioning><span title="ESP32 网页配网从零搭建" class=linkLabel_WmDU>ESP32 网页配网从零搭建</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/esp32-ble-provisioning><span title="ESP32 BLE 配网从零搭建" class=linkLabel_WmDU>ESP32 BLE 配网从零搭建</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/en/docs/algo/><span title=数学建模算法学习文档 class=categoryLinkLabel_W154>数学建模算法学习文档</span></a><button aria-label="Collapse sidebar category '数学建模算法学习文档'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/数学建模常用符号解释><span title=数学建模常用符号解释 class=linkLabel_WmDU>数学建模常用符号解释</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/一元线性回归><span title=一元线性回归 class=linkLabel_WmDU>一元线性回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/多元线性回归><span title=多元线性回归 class=linkLabel_WmDU>多元线性回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/多项式回归><span title=多项式回归 class=linkLabel_WmDU>多项式回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/非线性回归><span title=非线性回归 class=linkLabel_WmDU>非线性回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/Logistic回归><span title=Logistic回归 class=linkLabel_WmDU>Logistic回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/岭回归><span title=岭回归 class=linkLabel_WmDU>岭回归</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/线性规划><span title=线性规划 class=linkLabel_WmDU>线性规划</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/整数规划><span title=整数规划 class=linkLabel_WmDU>整数规划</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/遗传算法><span title=遗传算法 class=linkLabel_WmDU>遗传算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/粒子群算法><span title=粒子群算法 class=linkLabel_WmDU>粒子群算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/模拟退火算法><span title=模拟退火算法 class=linkLabel_WmDU>模拟退火算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/蚁群算法><span title=蚁群算法 class=linkLabel_WmDU>蚁群算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/en/docs/algo/层次分析法><span title=层次分析法 class=linkLabel_WmDU>层次分析法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/TOPSIS法><span title=TOPSIS法 class=linkLabel_WmDU>TOPSIS法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/熵权法><span title=熵权法 class=linkLabel_WmDU>熵权法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/模糊综合评价><span title=模糊综合评价 class=linkLabel_WmDU>模糊综合评价</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/决策树><span title=决策树 class=linkLabel_WmDU>决策树</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/随机森林><span title=随机森林 class=linkLabel_WmDU>随机森林</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/支持向量机><span title=支持向量机 class=linkLabel_WmDU>支持向量机</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/朴素贝叶斯><span title=朴素贝叶斯 class=linkLabel_WmDU>朴素贝叶斯</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/K近邻算法><span title=K近邻算法 class=linkLabel_WmDU>K近邻算法</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/K-means聚类><span title=K-means聚类 class=linkLabel_WmDU>K-means聚类</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/层次聚类><span title=层次聚类 class=linkLabel_WmDU>层次聚类</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/DBSCAN聚类><span title=DBSCAN聚类 class=linkLabel_WmDU>DBSCAN聚类</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/主成分分析><span title=主成分分析 class=linkLabel_WmDU>主成分分析</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/en/docs/algo/09_0-1规划><span title=0-1规划 class=linkLabel_WmDU>0-1规划</span></a></ul><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/fft><span title=快速傅里叶变换（FFT） class=linkLabel_WmDU>快速傅里叶变换（FFT）</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/en/docs/poetry/><span title=宋词三百首 class=categoryLinkLabel_W154>宋词三百首</span></a><button aria-label="Expand sidebar category '宋词三百首'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role=button aria-expanded=false href=/en/docs/ros/C++知识总结><span title=ros class=categoryLinkLabel_W154>ros</span></a></div><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/姿态解算><span title=姿态解算 class=linkLabel_WmDU>姿态解算</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class=menu__link href=/en/docs/陀螺仪介绍><span title=陀螺仪 class=linkLabel_WmDU>陀螺仪</span></a></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=Breadcrumbs><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label="Home page" class=breadcrumbs__link href=/en/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/en/docs/algo/><span>数学建模算法学习文档</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>层次分析法</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>层次分析法</h1></header>
+<blockquote>
+<p>层次分析法（Analytic Hierarchy Process, AHP）是美国运筹学家 T. L. Saaty 于 20 世纪 70 年代提出的一种<strong>多准则决策方法</strong>。它把"选哪个方案最好"这类复杂决策问题分解成<strong>目标—准则—方案</strong>三个层次，用两两比较的方式把专家的主观判断量化成判断矩阵，再通过特征值方法求出各要素的权重，最后综合排序给出决策建议。AHP 是数学建模竞赛中<strong>评价类题目</strong>的"标配"方法之一：原理直观、不需要数据、计算量小，特别适合"评优、评选、选址、定权"这一类问题。本文从原理、适用场景、评价指标、可视化图表到可运行代码，完整梳理 AHP 的竞赛实战用法。</p>
+</blockquote>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一算法含义>一、算法含义<a href=#一算法含义 class=hash-link aria-label="Direct link to 一、算法含义" title="Direct link to 一、算法含义" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=11-通俗理解>1.1 通俗理解<a href=#11-通俗理解 class=hash-link aria-label="Direct link to 1.1 通俗理解" title="Direct link to 1.1 通俗理解" translate=no>​</a></h3>
+<p>假设你要从三台手机（A、B、C）中选一台，考虑四个指标：性能、价格、续航、外观。直接给每台手机打一个总分很难，因为：</p>
+<ul>
+<li class="">四个指标的重要性不一样（有人觉得性能重要，有人觉得价格重要）；</li>
+<li class="">每台手机在不同指标上各有优劣，"性能好但贵"和"便宜但续航差"怎么比较？</li>
+</ul>
+<p>AHP 的思路分三步：</p>
+<ol>
+<li class=""><strong>拆结构</strong>：把"选手机"拆成三层——目标（买哪台）、准则（性能/价格/续航/外观）、方案（A/B/C 三台手机）；</li>
+<li class=""><strong>两两比较</strong>：不直接问"性能有多重要"，而是问"性能比价格重要多少倍"，两两比较比一次性打分容易得多、也可靠得多；</li>
+<li class=""><strong>算权重再合成</strong>：先算出四个准则各自的权重（重要性），再算出每台手机在每个准则下的得分，最后把得分按权重加权求和，得到每台手机的最终得分，分数最高者胜出。</li>
+</ol>
+<p>所以 AHP 的本质是：<strong>把主观的"感觉"用一套严格的数学流程变成可以计算的"权重"和"得分"</strong>。它的口号是"把定性问题定量化"。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=12-三层层次结构>1.2 三层层次结构<a href=#12-三层层次结构 class=hash-link aria-label="Direct link to 1.2 三层层次结构" title="Direct link to 1.2 三层层次结构" translate=no>​</a></h3>
+<p>AHP 的第一步是把决策问题分解成层次结构，通常分三层：</p>
+<ol>
+<li class=""><strong>目标层（Goal）</strong>：决策的总目标，只有一个元素，如"选择最佳旅游目的地""评选优秀学生""确定最优厂址"；</li>
+<li class=""><strong>准则层（Criteria）</strong>：影响目标的因素/指标，如景色、费用、交通、住宿；准则个数 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>m</mi></mrow><annotation encoding=application/x-tex>m</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.4306em></span><span class="mord mathnormal">m</span></span></span></span> 一般取 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>2</mn><mo>∼</mo><mn>9</mn></mrow><annotation encoding=application/x-tex>2 \sim 9</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>2</span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>∼</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.6444em></span><span class=mord>9</span></span></span></span> 个（太多则两两比较负担过重）；</li>
+<li class=""><strong>方案层（Alternatives）</strong>：备选方案，如杭州、桂林、青岛三个城市。</li>
+</ol>
+<p>层次结构示意（本文示例：选择旅游目的地）：</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">        目标层：        选择最佳旅游目的地 O</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">                          /    |    \    \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">        准则层：     景色 C1  费用 C2  交通 C3  住宿 C4</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">                    / | \    / | \    / | \    / | \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">        方案层：   A1 A2 A3  ...（每个准则下都对三个方案两两比较）</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">                  杭州 桂林 青岛</span><br/></div></code></pre></div></div>
+<p>同一层的元素<strong>相互独立</strong>，上层元素支配（或影响）下层元素。这是 AHP 的核心假设之一。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=13-判断矩阵与-1-9-标度>1.3 判断矩阵与 1-9 标度<a href=#13-判断矩阵与-1-9-标度 class=hash-link aria-label="Direct link to 1.3 判断矩阵与 1-9 标度" title="Direct link to 1.3 判断矩阵与 1-9 标度" translate=no>​</a></h3>
+<p>有了层次结构，下一步是构造<strong>判断矩阵（成对比较矩阵）</strong>。以准则层为例：把 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>m</mi></mrow><annotation encoding=application/x-tex>m</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.4306em></span><span class="mord mathnormal">m</span></span></span></span> 个准则两两比较，问"准则 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>i</mi></mrow><annotation encoding=application/x-tex>i</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6595em></span><span class="mord mathnormal">i</span></span></span></span> 比准则 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>j</mi></mrow><annotation encoding=application/x-tex>j</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.854em;vertical-align:-0.1944em></span><span class="mord mathnormal" style=margin-right:0.0572em>j</span></span></span></span> 重要多少倍"，答案记为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><msub><mi>a</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><annotation encoding=application/x-tex>a_{ij}</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.7167em;vertical-align:-0.2861em></span><span class=mord><span class="mord mathnormal">a</span><span class=msupsub><span class="vlist-t vlist-t2"><span class=vlist-r><span class=vlist style=height:0.3117em><span style=top:-2.55em;margin-left:0em;margin-right:0.05em><span class=pstrut style=height:2.7em></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style=margin-right:0.0572em>ij</span></span></span></span></span><span class=vlist-s>​</span></span><span class=vlist-r><span class=vlist style=height:0.2861em><span></span></span></span></span></span></span></span></span></span>，全部答案排成矩阵：</p>
+<span class=katex-error title="ParseError: KaTeX parse error: Expected 'EOF', got '&' at position 8: a_{11} &̲ a_{12} & \cdot…" style=color:#cc0000>a_{11} & a_{12} & \cdots & a_{1m} \\
+a_{21} & a_{22} & \cdots & a_{2m} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mm}
+\end{pmatrix}$$
+
+判断矩阵必须满足三个性质（称为**正互反矩阵**）：
+
+1. **正性**：$a_{ij} > 0$（所有元素为正）；
+2. **互反性**：$a_{ji} = \dfrac{1}{a_{ij}}$（$j$ 比 $i$ 的重要程度是 $i$ 比 $j$ 的倒数）；
+3. **单位性**：$a_{ii} = 1$（自己和自己比，同样重要）。
+
+$a_{ij}$ 用 **Saaty 1-9 标度**赋值：
+
+| 标度 $a_{ij}$ | 含义（$i$ 相对 $j$） |
+|:---:|:---|
+| 1 | $i$ 与 $j$ 同样重要 |
+| 3 | $i$ 比 $j$ 稍微重要 |
+| 5 | $i$ 比 $j$ 明显重要 |
+| 7 | $i$ 比 $j$ 强烈重要 |
+| 9 | $i$ 比 $j$ 极端重要 |
+| 2, 4, 6, 8 | 上述相邻判断的中间值 |
+| 倒数（1/2, 1/3, …） | $j$ 比 $i$ 重要，$a_{ji} = 1/a_{ij}$ |
+
+为什么用 1-9 而不是 1-100？心理学研究表明，人对"差距"的主观分辨能力有限，1-9 的九级标度恰好覆盖了"同样重要"到"极端重要"的全部直觉范围，再细分反而会增加打分不一致的风险（这正是 Saaty 通过大量实验得到的结论）。
+
+**完全一致性**：如果专家的判断完全自洽，则任意三个元素满足传递性 $a_{ik} = a_{ij} \cdot a_{jk}$（例如 $i$ 比 $j$ 重要 2 倍、$j$ 比 $k$ 重要 3 倍，那么 $i$ 必然比 $k$ 重要 6 倍）。完全一致的矩阵秩为 1，但现实中专家打分总会有偏差，所以需要后面的一致性检验来把关。
+
+### 1.4 权重求解方法
+
+有了判断矩阵 $A$，下一步求各准则的权重向量 $w = (w_1, w_2, \dots, w_m)^T$，满足 $\sum_{i=1}^{m} w_i = 1$。最常用的是**特征值法**，竞赛中还常用**和积法**、**方根法**这两种近似方法。
+
+#### （1）特征值法（理论标准）
+
+由 Perron-Frobenius 定理，正互反矩阵 $A$ 有唯一的**最大正特征值** $\lambda_{\max}$，其对应的特征向量（归一化后）就是权重向量：
+
+$$Aw = \lambda_{\max} w, \qquad w_i = \frac{v_i}{\sum_{k=1}^{m} v_k}$$
+
+其中 $v = (v_1, \dots, v_m)^T$ 是 $\lambda_{\max}$ 对应的特征向量（各分量全为正）。
+
+为什么"特征向量就是权重"？直观理解：如果判断矩阵完全一致，$A$ 的第 $i$ 行就是权重比的真实值 $w_i / w_j$，此时 $Aw = mw$（可以验证 $\sum_j (w_i/w_j) w_j = m w_i$），即权重向量恰好是 $A$ 的特征向量，特征值为 $m$。矩阵有轻微不一致时，$Aw \approx \lambda_{\max} w$ 仍然成立，特征向量给出了"最接近真实权重"的最小二乘意义上的解。因此 $\lambda_{\max} \ge m$，**越接近 $m$ 说明判断越一致**。
+
+求解 $\lambda_{\max}$ 与特征向量的数值方法有：`numpy.linalg.eig` 直接求全部特征值、幂法（$w^{(k+1)} = A w^{(k)}$ 迭代并归一化，收敛到主特征向量）等。代码实现见第六节。
+
+#### （2）和积法（列归一化法）
+
+手算友好的近似方法，三步：
+
+1. **列归一化**：$b_{ij} = \dfrac{a_{ij}}{\sum_{k=1}^{m} a_{kj}}$（每列元素除以该列之和）；
+2. **行求和**：$\bar{w}_i = \sum_{j=1}^{m} b_{ij}$；
+3. **归一化**：$w_i = \dfrac{\bar{w}_i}{\sum_{k=1}^{m} \bar{w}_k}$（等价于对第 1 步结果直接按行取平均）。
+
+#### （3）方根法（几何平均法）
+
+同样两步：
+
+1. **行几何平均**：$\bar{w}_i = \left( \prod_{j=1}^{m} a_{ij} \right)^{1/m}$（每行 $m$ 个元素相乘后开 $m$ 次方）；
+2. **归一化**：$w_i = \dfrac{\bar{w}_i}{\sum_{k=1}^{m} \bar{w}_k}$。
+
+三种方法在矩阵接近一致时结果几乎相同（第六节代码会同时给出三种结果对比）。竞赛论文中写"用特征值法求权重"即可，也可以用和积法手算展示过程。
+
+### 1.5 一致性检验
+
+专家打分难免自相矛盾（比如"A 比 B 重要、B 比 C 重要、C 又比 A 重要"的循环）。AHP 用 $\lambda_{\max}$ 与矩阵阶数 $m$ 的偏离程度来度量这种矛盾：
+
+**一致性指标（Consistency Index）**：
+
+$$CI = \frac{\lambda_{\max} - m}{m - 1}$$
+
+完全一致时 $\lambda_{\max} = m$，$CI = 0$；越不一致 $CI$ 越大。
+
+**一致性比例（Consistency Ratio）**：为了消除矩阵阶数的影响，把 $CI$ 除以同阶随机矩阵的平均 $CI$（称为**平均随机一致性指标 $RI$**，Saaty 用大量随机矩阵模拟得到）：
+
+$$CR = \frac{CI}{RI}$$
+
+**$RI$ 取值表**（$m = 1 \sim 10$，Saaty 标准值）：
+
+| $m$（阶数） | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| $RI$ | 0.00 | 0.00 | 0.58 | 0.90 | 1.12 | 1.24 | 1.32 | 1.41 | 1.45 | 1.49 |
+
+**判定准则：当 $CR &lt; 0.1$ 时，认为判断矩阵通过一致性检验**，权重可以接受；否则认为判断矩阵不一致程度过大，需**修正判断矩阵**（复查打分、重新两两比较，或对矛盾元素微调），直到 $CR &lt; 0.1$。注意 $m = 1, 2$ 时矩阵必然一致（$RI = 0$，$CR$ 无意义，直接通过）。
+
+第六节代码专门演示了一个 $CR = 0.1407 > 0.1$ 的矩阵及其修正全过程。
+
+### 1.6 层次总排序
+
+各层单独求出权重后，最后一步是**自顶向下合成**，得到每个方案对总目标的最终权重：
+
+- 准则层对目标层的权重：$w^{C} = (w_1^{C}, \dots, w_m^{C})^T$；
+- 方案层对每个准则 $j$ 的权重：$w^{(j)} = (w_{1}^{(j)}, \dots, w_{n}^{(j)})^T$（$n$ 个方案）；
+- 把它们按列排成**方案层权重矩阵** $W_{alt} = \big( w^{(1)}, w^{(2)}, \dots, w^{(m)} \big)$（$n \times m$，行=方案，列=准则）；
+
+则**层次总排序**（各方案对目标的最终得分）为：
+
+$$w^{total} = W_{alt} \cdot w^{C}, \qquad w_i^{total} = \sum_{j=1}^{m} w_{ij}^{alt} \cdot w_j^{C}$$
+
+即"方案 $i$ 在每个准则下的得分，按准则权重加权求和"。得分最高者即最优方案。
+
+层次总排序也要做一次整体一致性检验（各准则权重加权平均的 $CR$）：
+
+$$CR_{total} = \frac{\sum_{j=1}^{m} w_j^{C} \, CI_j}{\sum_{j=1}^{m} w_j^{C} \, RI_j}$$
+
+其中 $CI_j$ 是方案层对第 $j$ 个准则的判断矩阵的一致性指标，$RI_j$ 是对应阶数的 $RI$。$CR_{total} &lt; 0.1$ 时整体通过。
+
+### 1.7 优缺点
+
+**优点**：
+
+- 原理简单直观，"三层结构 + 两两比较 + 特征向量"一套流程走到底，评委一看就懂；
+- **不需要客观数据**：只用专家打分就能运行，特别适合数据稀缺或无法量化的评价问题；
+- 计算量小：几阶矩阵的特征值手算（和积法）都能完成，代码实现也就几十行；
+- 一致性检验机制让主观判断"有据可查"，比拍脑袋打分严谨得多；
+- 可扩展性好：可以和其他方法组合（熵权法组合赋权、TOPSIS 排序、模糊数学推广为 FAHP）。
+
+**缺点**：
+
+- **主观性强**：权重完全来自专家打分，不同专家结论可能不同，结果稳定性差；
+- 准则过多时两两比较次数 $m(m-1)/2$ 快速增长（10 个准则要比较 45 次），专家负担大、不一致风险高；
+- 只利用判断矩阵的信息，完全忽略客观数据（若手上有真实数据，应结合熵权法等客观方法）；
+- 一致性检验通过（$CR &lt; 0.1$）只保证"不自相矛盾"，不保证"判断正确"；
+- 方案层元素过多时（如 20 个候选城市）同样面临两两比较爆炸的问题，通常先粗筛再精评。
+
+## 二、何时使用（适用场景与条件）
+
+### 2.1 适用场景
+
+1. **多准则决策（MCDM）**：目标受多个互相冲突的准则影响，需要综合权衡。如"买房：地段、价格、面积、学区怎么平衡"。这是 AHP 最原生的场景。
+2. **评价与排序**：对若干对象按多个指标打分排名。如高校排名、供应商评价、员工绩效评估。
+3. **权重确定**：AHP 常常只作为"定权工具"嵌入更大的模型——先用 AHP 求各指标权重，再用 TOPSIS、模糊综合评价、加权评分等方法完成排序。这是竞赛中最常见的用法。
+4. **选址、选型、评优**：厂址选择、物流中心选址、设备选型、评奖学金、评先进班级等。
+
+### 2.2 竞赛典型题目
+
+- **评价类题目必提**：国赛 2010B"上海世博会影响力的定量评估"、2012A"葡萄酒的评价"、2016B"小区开放对道路通行的影响"（评价部分）等题目，评价指标体系建立后都涉及指标赋权，AHP 是最经典的赋权方法；
+- **选题决策**：题目背景自带多个备选方案时（选址、方案比选），用 AHP 直接排序；
+- **作为组合模型的一部分**：如"层次分析法 + 模糊综合评价"评水质等级、"AHP + TOPSIS"评供应商、"熵权 + AHP 组合赋权"再加权打分，都是国奖论文的高频组合。
+
+竞赛中只要论文出现"评价指标体系"四个字，评审默认你要交代**指标权重从哪来**——AHP 就是最稳妥的交代方式之一。
+
+### 2.3 使用前提（建模前检查清单）
+
+1. **因素可以两两比较**：专家能对任意两个准则/方案说出"谁比谁重要多少"；
+2. **有可依赖的打分来源**：本人/队友合理判断、问卷、专家访谈、文献依据均可，论文中需说明打分依据；
+3. **准则个数适中**：建议 $m \le 9$（两两比较次数 $m(m-1)/2$ 可承受，且 $RI$ 表有标准值）；超过 9 个应分层分组（把准则再细分成子准则）；
+4. **方案个数不多**：方案层每个准则下也要两两比较，方案太多时先粗筛出 3~7 个；
+5. **问题确实主观/定性强**：如果全部指标都有客观数据，优先考虑客观赋权法（熵权法），或与 AHP 组合。
+
+### 2.4 不适用 / 慎用的情形
+
+- **准则过多**（如 20 个指标）：两两比较负担大、不一致概率高，应改用德尔菲法、熵权法等，或先聚类降维；
+- **完全客观数据的场景**：有完整的数据矩阵时，熵权法、主成分分析、变异系数法等客观赋权法更合适——AHP 的主观打分在数据面前说服力弱；
+- **精度要求高、主观争议大的问题**：如精确的资源分配、投资组合优化，AHP 的 1-9 离散标度太粗糙，应换用更精细的模型（如 ANP、多目标规划）；
+- **需要大量方案排序**：方案成百上千时两两比较不可行，用加权评分法、数据包络分析（DEA）等。
+
+### 2.5 与熵权法、TOPSIS、模糊综合评价的配合与选择
+
+AHP 很少"单打独斗"，竞赛中常见组合方式：
+
+| 方法 | 数据来源 | 角色 | 与 AHP 的配合方式 |
+|:---|:---|:---|:---|
+| 熵权法 | 客观数据（指标离散程度） | 定权 | 与 AHP 权重线性组合（$\alpha w_{AHP} + (1-\alpha) w_{熵}$）形成"主客观组合赋权"，论文常用 |
+| TOPSIS | 数据 + 权重 | 排序 | AHP 出权重，TOPSIS 出排序，两者串联是最经典的"评价两件套" |
+| 模糊综合评价 | 专家模糊评语（好/较好/一般） | 综合评价 | AHP 定权重 + 隶属度矩阵合成，处理"边界模糊"的评价等级问题 |
+| 主成分分析 | 客观数据 | 降维/定权 | 与熵权法类似作客观参照，或先降维再对主成分做 AHP |
+
+**选择口诀**：有数据没专家 → 熵权法/主成分；有专家没数据 → AHP；两者都有 → 组合赋权；要排序 → AHP+TOPSIS；评语是模糊等级 → AHP+模糊综合评价。
+
+## 三、算法指标
+
+AHP 的"指标"不像回归那样有 R²、RMSE，它的核心指标围绕**权重**和**一致性**展开。以下逐项说明（公式中 $m$ 为判断矩阵阶数）。
+
+### 3.1 各准则权重 $w_j$（准则层权重向量）
+
+- **公式**：特征值法 $Aw = \lambda_{\max} w$，归一化 $w_j = \dfrac{v_j}{\sum_{k} v_k}$；或和积法/方根法（见 1.4 节）
+- **含义与解读**：准则 $j$ 在总目标中的重要性占比，满足 $\sum w_j = 1$。例如本例 $w_{景色} = 0.5462$，表示"景色"贡献了约 54.6% 的决策权重，是决策者最看重的因素。权重差异越大，说明决策者偏好越鲜明；权重接近时，各方案最终得分差距也会缩小。
+
+### 3.2 最大特征值 $\lambda_{\max}$
+
+- **公式**：$Aw = \lambda_{\max} w$（即 $A$ 的 Perron 根，正互反矩阵必有唯一正的最大特征值）
+- **含义与解读**：$\lambda_{\max} \ge m$，且**等于 $m$ 当且仅当矩阵完全一致**。因此 $\lambda_{\max}$ 与 $m$ 的差距就是"判断自相矛盾程度"的直接度量。本例准则层矩阵 $\lambda_{\max} = 4.0511$，只比 $m = 4$ 大 0.0511，说明判断相当一致。
+
+### 3.3 一致性指标 $CI$（Consistency Index）
+
+- **公式**：$CI = \dfrac{\lambda_{\max} - m}{m - 1}$
+- **含义与解读**：把 $\lambda_{\max}$ 的偏移量按自由度 $m-1$ 平均。$CI = 0$ 表示完全一致；$CI$ 越大矛盾越严重。单独看 $CI$ 没有绝对好坏标准（阶数不同，随机波动不同），需要与 $RI$ 比较。
+
+### 3.4 一致性比例 $CR$（Consistency Ratio）
+
+- **公式**：$CR = \dfrac{CI}{RI}$，$RI$ 查表（$m=3 \to 0.58$，$m=4 \to 0.90$，见 1.5 节 RI 表）
+- **含义与解读**：**AHP 的核心判定指标**。$CR &lt; 0.1$ 时判断矩阵通过一致性检验，权重可信；$CR \ge 0.1$ 时必须修正判断矩阵后重算。本例准则层 $CR = 0.0189 &lt; 0.1$ 通过；演示用的错误矩阵 $CR = 0.1407$，修正后降至 $0.0032$。
+
+### 3.5 层次总排序权重 $w_i^{total}$
+
+- **公式**：$w^{total} = W_{alt} \cdot w^{C}$，即 $w_i^{total} = \sum_{j=1}^{m} w_{ij}^{alt} \, w_j^{C}$
+- **含义与解读**：方案 $i$ 对总目标的**最终得分**（合成权重），等于它在各准则下得分的加权和，满足 $\sum_i w_i^{total} = 1$。本例桂林 $0.4130$、杭州 $0.3224$、青岛 $0.2646$。配套的整体一致性检验 $CR_{total} = \dfrac{\sum_j w_j^C CI_j}{\sum_j w_j^C RI_j} &lt; 0.1$（本例 $0.0111$）。
+
+### 3.6 各方案最终得分与排序
+
+- **公式**：对 $w_i^{total}$ 降序排列得名次
+- **含义与解读**：AHP 的最终输出。得分最高者为推荐方案；若第一名与第二名差距很小（如 0.410 vs 0.405），说明两方案难分伯仲，应做灵敏度分析（微调权重看排序是否翻转）后再下结论。
+
+### 3.7 指标汇总表
+
+| 指标 | 中文名 | 公式 | 含义与解读 |
+|:---|:---|:---|:---|
+| $w_j$ | 准则权重 | $Aw = \lambda_{\max} w$ 归一化，或和积法/方根法 | 准则 $j$ 的重要性占比，$\sum w_j = 1$ |
+| $\lambda_{\max}$ | 最大特征值 | $Aw = \lambda_{\max} w$ | $\ge m$，越接近 $m$ 判断越一致 |
+| $CI$ | 一致性指标 | $CI = \dfrac{\lambda_{\max} - m}{m - 1}$ | 判断矩阵偏离完全一致的程度，$CI = 0$ 完全一致 |
+| $CR$ | 一致性比例 | $CR = \dfrac{CI}{RI}$ | 核心判定：$CR &lt; 0.1$ 通过，否则修正矩阵 |
+| $w_i^{total}$ | 层次总排序权重 | $w^{total} = W_{alt} \cdot w^C$ | 方案 $i$ 的最终得分，加权求和自顶向下合成 |
+| 名次 | 方案排序 | 对 $w_i^{total}$ 降序 | 最终决策结论；差距小时做灵敏度分析 |
+| $CR_{total}$ | 总排序一致性比例 | $\dfrac{\sum_j w_j^C CI_j}{\sum_j w_j^C RI_j}$ | 整体一致性把关，$&lt; 0.1$ 通过 |
+
+## 四、可视化图表
+
+### 4.1 四张图速查表
+
+| 图名 | 用途 | 关键解读点 |
+|:---|:---|:---|
+| ① 层次结构图（三层框线图） | 论文建模部分的开篇图，展示目标—准则—方案三层结构与支配关系 | 三层框位置清楚、箭头方向自上而下；准则数、方案数与文字一致；竞赛论文中必放此图 |
+| ② 判断矩阵热力图 | 直观展示判断矩阵中两两比较的数值分布与对称性 | 对角线恒为 1；关于对角线互为倒数（$a_{ji} = 1/a_{ij}$）；颜色越深表示越重要，一眼看出哪个准则/方案最受偏好 |
+| ③ 各准则权重柱状图 | 展示准则层权重分布，说明"决策者最看重什么" | 柱高标注数值、总和为 1；最高的准则（本例景色 0.5462）主导决策；论文中配合文字"决策者最看重景色，其次费用" |
+| ④ 各方案层次总排序权重条形图 | **最终结论图**，展示各方案最终得分与排名 | 最优方案醒目突出（可用不同颜色）；数值标注在条形末端；论文结论段引用此图"桂林得分 0.4130，为最优方案" |
+
+第六节代码生成这 4 张图，文件名分别为 `figures/ahp_structure.png`、`figures/ahp_matrix_heatmap.png`、`figures/ahp_criterion_weights.png`、`figures/ahp_final_ranking.png`。
+
+### 4.2 每张图"好"与"异常"的特征
+
+- **图①层次结构图**：好——三层对齐、箭头不交叉、层级名称规范（目标层/准则层/方案层）；异常——箭头方向画反（应自上而下）、缺少目标层或方案层、准则数与正文判断矩阵阶数对不上。
+- **图②判断矩阵热力图**：好——对角线全 1、上下三角颜色呈"互补"关系（$a_{ji} = 1/a_{ij}$）、最深格对应最受偏好元素；异常——不对称（正互反性质被破坏，说明矩阵录入错误）、深色格出现在对角线以外却与其转置位置颜色相同（如 $a_{ij}$ 与 $a_{ji}$ 同深，必有一处录入错误）。
+- **图③准则权重柱状图**：好——数值标注齐全、总和约等于 1、主次分明（最高柱与最低柱差距明显）；异常——权重出现负数或大于 1（归一化出错）、所有柱等高（各准则无差异，说明打分没区分度，AHP 白做了）。
+- **图④总排序条形图**：好——最优方案颜色突出、名次从高到低排列、标注精确到 3~4 位小数；异常——三条权重和明显不等于 1（合成公式算错，常见于把准则权重直接当方案权重）、排序与直觉严重冲突且无解释（应回头检查判断矩阵方向是否填反，如第六节演示的"费用"矩阵错误）。
+
+## 五、符号说明
+
+| 符号 | 含义 | 示例/单位 |
+|:---|:---|:---|
+| $O$ | 目标层元素（决策总目标） | "选择最佳旅游目的地" |
+| $C_j$ | 第 $j$ 个准则，$j = 1, \dots, m$ | $C_1$ 景色、$C_2$ 费用 |
+| $A_i$ | 第 $i$ 个方案，$i = 1, \dots, n$ | $A_1$ 杭州、$A_2$ 桂林 |
+| $m$ | 准则个数（判断矩阵阶数） | 本例 $m = 4$ |
+| $n$ | 方案个数 | 本例 $n = 3$ |
+| $A$ | 判断矩阵（正互反矩阵） | 4×4 准则层矩阵 |
+| $a_{ij}$ | $i$ 比 $j$ 的重要程度（1-9 标度） | $a_{12} = 3$：景色比费用稍微重要 |
+| $w = (w_1, \dots, w_m)^T$ | 权重向量（准则层） | $(0.5462, 0.2323, 0.0838, 0.1377)^T$ |
+| $w^{(j)}$ | 方案层对准则 $j$ 的权重向量 | $w^{(1)} = (0.3196, 0.5584, 0.1220)^T$ |
+| $W_{alt}$ | 方案层权重矩阵（行=方案，列=准则） | 3×4 矩阵 |
+| $\lambda_{\max}$ | 最大特征值 | 准则层矩阵为 4.0511 |
+| $CI$ | 一致性指标 | $CI = (\lambda_{\max} - m)/(m - 1)$ |
+| $RI$ | 平均随机一致性指标 | $m = 3$ 时 $RI = 0.58$；$m = 4$ 时 $RI = 0.90$ |
+| $CR$ | 一致性比例 | $CR = CI / RI$，要求 $&lt; 0.1$ |
+| $w^{total} = (w_1^{total}, \dots, w_n^{total})^T$ | 层次总排序权重（方案最终得分） | $(0.3224, 0.4130, 0.2646)^T$ |
+| $CR_{total}$ | 总排序一致性比例 | 本例 0.0111 |
+
+## 六、可运行程序（完整代码）
+
+> 环境要求：Python 3.12，依赖 numpy、scipy、scikit-learn、matplotlib、pandas（`pip install numpy scipy scikit-learn matplotlib pandas`）。以下所有代码块**按顺序拼接**保存为 `ahp_demo.py`，在本文档所在目录运行即可：控制台打印全部指标（各矩阵的 $\lambda_{\max}$、CI、CR、权重、层次总排序），并在 `figures/` 子目录生成 4 张图。
+>
+> 示例问题：**选择最佳旅游目的地**。目标层 1 个元素，准则层 4 个准则（景色、费用、交通、住宿），方案层 3 个方案（杭州、桂林、青岛）；共构造 4 个方案层判断矩阵 + 1 个准则层判断矩阵，其中"费用"准则的矩阵先给出一个 $CR = 0.1407 > 0.1$ 的**错误版本**，演示一致性检验报警与修正全流程。
+>
+> 库对照说明：AHP 在 scikit-learn 中**没有标准接口**（sklearn 面向机器学习估计器，不含多准则决策方法），因此权重求解全部手写实现（特征值法 + 和积法 + 方根法），并用 `scipy.linalg.eig` 与 `sklearn.preprocessing.normalize` 对手写结果交叉验证。运行时会依次弹出 4 张图窗口（关闭后继续执行）；如只需保存图片不弹窗，可在命令行加环境变量：`MPLBACKEND=Agg python ahp_demo.py`。
+
+```python
+# -*- coding: utf-8 -*-
+"""
+============================================================
+层次分析法（AHP）完整示例：选择旅游目的地
+------------------------------------------------------------
+层次结构：
+  目标层 O：选择最佳旅游目的地
+  准则层 C：C1 景色、C2 费用、C3 交通、C4 住宿
+  方案层 A：A1 杭州、A2 桂林、A3 青岛
+输出：
+  1) 1 个准则层判断矩阵 + 4 个方案层判断矩阵的 λmax、CI、CR 与权重
+  2) 演示"费用"准则矩阵 CR > 0.1 时的一致性修正流程
+  3) 层次总排序（各方案最终得分与排名）
+  4) figures/ 目录下 4 张图
+依赖：numpy、scipy、scikit-learn、matplotlib、pandas
+库对照说明：AHP 在 scikit-learn 中没有标准接口（sklearn 面向机器学习
+  估计器，不包含多准则决策方法），本文权重求解全部手写实现，并用
+  scipy.linalg.eig、sklearn.preprocessing.normalize 与方根法交叉验证。
+============================================================
+"""
+
+# ========== 0. 导入库与全局设置 ==========
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
+from scipy import linalg as sla                      # 特征值法交叉验证
+from sklearn.preprocessing import normalize         # 权重 L1 归一化交叉验证
+
+# ---- matplotlib 中文显示设置（防止图内中文乱码）----
+plt.rcParams["font.sans-serif"] = ["PingFang SC", "Arial Unicode MS", "SimHei"]
+plt.rcParams["axes.unicode_minus"] = False          # 让负号"-"正常显示
+
+# ---- 图片输出目录（相对当前工作目录的 figures/ 子目录）----
+FIG_DIR = "figures"
+os.makedirs(FIG_DIR, exist_ok=True)
+
+np.set_printoptions(precision=4, suppress=True)     # 控制台打印格式
+```
+
+```python
+# ========== 1. 构造判断矩阵 ==========
+# 层次结构：目标层 O；准则层 C1 景色、C2 费用、C3 交通、C4 住宿；
+#           方案层 A1 杭州、A2 桂林、A3 青岛
+crit_labels = ["C1 景色", "C2 费用", "C3 交通", "C4 住宿"]
+alt_labels  = ["A1 杭州", "A2 桂林", "A3 青岛"]
+
+# ---- 准则层对目标层的判断矩阵 A（4x4）----
+# 含义：景色比费用重要 3 倍、比交通重要 5 倍、比住宿重要 4 倍；
+#       费用比交通重要 3 倍、比住宿重要 2 倍；住宿比交通重要 2 倍
+A_crit = np.array([
+    [1,   3,   5,   4  ],
+    [1/3, 1,   3,   2  ],
+    [1/5, 1/3, 1,   1/2],
+    [1/4, 1/2, 2,   1  ],
+])
+
+# ---- 方案层对准则 C1 景色（3x3）：桂林景色最好，杭州次之，青岛再次 ----
+B_scenery = np.array([
+    [1,   1/2, 3  ],
+    [2,   1,   4  ],
+    [1/3, 1/4, 1  ],
+])
+
+# ---- 方案层对准则 C2 费用（初始版本：故意不一致，CR 略超 0.1 用于演示修正）----
+# 真实认知：青岛最省钱、桂林次之、杭州最贵；但专家误把 a12 填成 2
+#（应为 1/2，方向填反），使三组两两比较在倍数上互相冲突
+B_cost_bad = np.array([
+    [1,   2,   1/5],
+    [1/2, 1,   1/3],
+    [5,   3,   1  ],
+])
+
+# ---- 方案层对准则 C2 费用（修正版：a12 由 2 改为 1/2，消除矛盾）----
+B_cost = np.array([
+    [1,   1/2, 1/5],
+    [2,   1,   1/3],
+    [5,   3,   1  ],
+])
+
+# ---- 方案层对准则 C3 交通（3x3）：杭州最便捷，青岛次之，桂林最远 ----
+B_transport = np.array([
+    [1,   3,   2  ],
+    [1/3, 1,   1/2],
+    [1/2, 2,   1  ],
+])
+
+# ---- 方案层对准则 C4 住宿（3x3）：杭州住宿条件最好，桂林次之，青岛再次 ----
+B_lodging = np.array([
+    [1,   2,   3  ],
+    [1/2, 1,   2  ],
+    [1/3, 1/2, 1  ],
+])
+```
+
+```python
+# ========== 2. 手写实现：权重求解 + 一致性检验 ==========
+# 平均随机一致性指标 RI 表（n = 1 ~ 10，Saaty 标准值）
+RI_TABLE = {1: 0.00, 2: 0.00, 3: 0.58, 4: 0.90, 5: 1.12,
+            6: 1.24, 7: 1.32, 8: 1.41, 9: 1.45, 10: 1.49}
+
+def ahp_eigen(A):
+    """特征值法：最大特征值 λmax 对应的特征向量归一化后即权重向量"""
+    eigvals, eigvecs = np.linalg.eig(A)          # 手写核心：np.linalg.eig
+    idx = np.argmax(eigvals.real)                # 找最大特征值（Perron 根）
+    lam_max = eigvals[idx].real
+    w = np.abs(eigvecs[:, idx].real)             # 对应特征向量（取正）
+    return w / w.sum(), lam_max                  # 归一化得权重
+
+def ahp_sum_product(A):
+    """和积法：①每列归一化 ②按行求和 ③再归一化"""
+    A_col_norm = A / A.sum(axis=0)               # 第 1 步：列归一化
+    w = A_col_norm.sum(axis=1)                   # 第 2 步：按行求和
+    return w / w.sum()                           # 第 3 步：归一化
+
+def ahp_root(A):
+    """方根法（几何平均法）：①每行元素乘积开 n 次方 ②归一化"""
+    n = A.shape[0]
+    w = np.prod(A, axis=1) ** (1 / n)            # 第 1 步：每行几何平均
+    return w / w.sum()                           # 第 2 步：归一化
+
+def consistency_check(A):
+    """一致性检验：返回 (λmax, CI, CR)"""
+    w, lam_max = ahp_eigen(A)
+    n = A.shape[0]
+    CI = (lam_max - n) / (n - 1)                 # 一致性指标
+    RI = RI_TABLE.get(n, 1.49)                   # 查 RI 表
+    CR = CI / RI                                 # 一致性比例
+    return lam_max, CI, CR
+
+def report_matrix(name, A, row_labels):
+    """打印单个判断矩阵：矩阵本身、三种方法权重、λmax/CI/CR 与通过与否"""
+    print("=" * 68)
+    print(f"【{name}】")
+    print(pd.DataFrame(A, index=row_labels, columns=row_labels).round(3).to_string())
+    w_eig, lam_max = ahp_eigen(A)                # 特征值法（本文主结果）
+    w_sp   = ahp_sum_product(A)                  # 和积法（手写对照）
+    w_root = ahp_root(A)                         # 方根法（手写对照）
+    _, CI, CR = consistency_check(A)
+    # ---- 库对照：scipy 求特征值 + sklearn 做 L1 归一化，应与手写一致 ----
+    evals, evecs = sla.eig(A)
+    w_scipy = np.abs(evecs[:, np.argmax(evals.real)].real)
+    # 注意：sklearn 的 normalize 默认按"行"（每个样本）归一化，
+    # 因此先把向量 reshape 成 1 行 n 列，再取回一维数组
+    w_scipy = normalize(w_scipy.reshape(1, -1), norm="l1").ravel()
+    print(f"λmax = {lam_max:.4f}，CI = {CI:.4f}，CR = {CR:.4f}",
+          "-> 通过（CR &lt; 0.1）" if CR &lt; 0.1 else "-> 不通过（CR >= 0.1）！！！")
+    print(f"权重（特征值法）：{np.round(w_eig, 4)}")
+    print(f"权重（和积法）  ：{np.round(w_sp, 4)}")
+    print(f"权重（方根法）  ：{np.round(w_root, 4)}")
+    print(f"权重（scipy + sklearn 对照）：{np.round(w_scipy, 4)}",
+          "（与特征值法一致）" if np.allclose(w_scipy, w_eig) else "（与特征值法不一致！）")
+    return w_eig
+```
+
+```python
+# ========== 3. 逐矩阵求解：准则层 + 方案层 ==========
+print("=" * 68)
+print("层次分析法（AHP）示例：选择最佳旅游目的地")
+print("=" * 68)
+print("层次结构：目标层 O（最佳旅游目的地）")
+print("          准则层 C1 景色、C2 费用、C3 交通、C4 住宿")
+print("          方案层 A1 杭州、A2 桂林、A3 青岛")
+print("库对照说明：AHP 无标准 sklearn 接口（sklearn 面向机器学习估计器，")
+print("  不包含多准则决策方法），权重求解全部手写；下方每个矩阵均用")
+print("  scipy.linalg.eig 与 sklearn.preprocessing.normalize 交叉验证。")
+print()
+
+# ---- 准则层：准则 C 对目标 O ----
+w_crit = report_matrix("矩阵 1：准则层 C 对目标层 O（4 阶判断矩阵）", A_crit, crit_labels)
+print()
+# ---- 方案层：方案 A 对准则 C1 景色、C3 交通、C4 住宿 ----
+w_B1 = report_matrix("矩阵 2：方案层 A 对准则 C1 景色（3 阶判断矩阵）", B_scenery, alt_labels)
+print()
+w_B3 = report_matrix("矩阵 3：方案层 A 对准则 C3 交通（3 阶判断矩阵）", B_transport, alt_labels)
+print()
+w_B4 = report_matrix("矩阵 4：方案层 A 对准则 C4 住宿（3 阶判断矩阵）", B_lodging, alt_labels)
+print()
+
+# ========== 4. 演示：CR > 0.1 的判断矩阵一致性修正流程 ==========
+print("=" * 68)
+print("【一致性修正流程演示】方案层 A 对准则 C2 费用（初始版本）")
+print("=" * 68)
+w_bad, lam_bad = ahp_eigen(B_cost_bad)
+CI_bad = (lam_bad - 3) / (3 - 1)
+CR_bad = CI_bad / RI_TABLE[3]
+print(pd.DataFrame(B_cost_bad, index=alt_labels, columns=alt_labels).round(3).to_string())
+print(f"λmax = {lam_bad:.4f}，CI = {CI_bad:.4f}，CR = {CR_bad:.4f} -> 不通过（CR >= 0.1）")
+print(">>> 需修正判断矩阵！该矩阵存在循环矛盾：")
+print("    a12 = 2 认为杭州优于桂林，a13 = 1/5 认为青岛远胜杭州，")
+print("    而 a23 = 1/3 又认为青岛优于桂林——三组比较在倍数上互相冲突。")
+print(">>> 修正方案：复核打分后发现 a12 误填（方向填反，应为 1/2，")
+print("    即桂林比杭州更省钱、更受偏好），将 a12 由 2 改为 1/2 后重新检验：")
+print()
+w_B2 = report_matrix("矩阵 2（修正后）：方案层 A 对准则 C2 费用（3 阶判断矩阵）",
+                     B_cost, alt_labels)
+print()
+
+# ========== 5. 层次总排序 ==========
+# 方案层权重矩阵 W_alt：每一列是某个准则下 3 个方案的权重（按列拼接）
+W_alt = np.column_stack([w_B1, w_B2, w_B3, w_B4])
+# 层次总排序：各方案对目标的最终权重 = 方案层权重矩阵 x 准则层权重向量
+w_final = W_alt @ w_crit
+
+print("=" * 68)
+print("【层次总排序】各方案对目标层的最终权重")
+print("=" * 68)
+df_alt = pd.DataFrame(W_alt, index=alt_labels, columns=crit_labels).round(4)
+df_alt["总排序权重"] = np.round(w_final, 4)
+print("方案层权重矩阵 W_alt（行 = 方案，列 = 准则）：")
+print(df_alt.to_string())
+print()
+rank = np.argsort(-w_final)                     # 按权重降序排名
+print("各方案最终得分与排序：")
+for k in range(3):
+    print(f"  第 {k + 1} 名：{alt_labels[rank[k]]}，总排序权重 = {w_final[rank[k]]:.4f}")
+print(f"最优方案：{alt_labels[rank[0]]}（总排序权重 {w_final[rank[0]]:.4f}）")
+
+# 层次总排序的一致性检验：CR_总 = Σ w_j CI_j / Σ w_j RI_j
+CI_list = [consistency_check(B)[1] for B in [B_scenery, B_cost, B_transport, B_lodging]]
+RI_list = [RI_TABLE[3]] * 4
+CR_total = (w_crit @ np.array(CI_list)) / (w_crit @ np.array(RI_list))
+print(f"层次总排序一致性比例 CR_总 = {CR_total:.4f}",
+      "-> 通过（CR_总 &lt; 0.1）" if CR_total &lt; 0.1 else "-> 不通过（CR_总 >= 0.1）")
+print()
+```
+
+```python
+# ========== 6. 可视化（4 张图） ==========
+
+def draw_box(ax, x, y, w, h, text, fc="#dbe9f6", ec="#2b6cb0"):
+    """在指定位置画一个圆角矩形框并居中写文字"""
+    ax.add_patch(FancyBboxPatch((x, y), w, h,
+                                boxstyle="round,pad=0.02",
+                                linewidth=1.5, facecolor=fc, edgecolor=ec))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=10)
+
+def draw_arrow(ax, x1, y1, x2, y2, color="#4a5568"):
+    """画一条从 (x1,y1) 指向 (x2,y2) 的箭头"""
+    ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                arrowprops=dict(arrowstyle="-|>", color=color, lw=1.0))
+
+# ---- 图 1：层次结构图（三层框线图：目标 - 准则 - 方案）----
+fig, ax = plt.subplots(figsize=(10, 7))
+ax.set_xlim(0, 10)
+ax.set_ylim(0, 10)
+ax.axis("off")
+draw_box(ax, 3.5, 8.4, 3.0, 1.1, "目标层 O\n选择最佳旅游目的地", fc="#fef0d9", ec="#c05621")
+crit_labels_plot = ["C1 景色", "C2 费用", "C3 交通", "C4 住宿"]
+for i, lab in enumerate(crit_labels_plot):
+    x = 0.5 + i * 2.45
+    draw_box(ax, x, 5.2, 1.9, 0.9, lab)
+    draw_arrow(ax, 5.0, 8.4, x + 0.95, 6.1)
+alt_labels_plot = ["A1 杭州", "A2 桂林", "A3 青岛"]
+for j, lab in enumerate(alt_labels_plot):
+    x = 1.5 + j * 2.6
+    draw_box(ax, x, 1.6, 1.9, 0.9, lab, fc="#e6f6e6", ec="#2f855a")
+    for i in range(4):
+        draw_arrow(ax, 0.5 + i * 2.45 + 0.95, 5.2, x + 0.95, 2.5)
+ax.set_title("AHP 层次结构图：目标层 — 准则层 — 方案层", fontsize=13)
+plt.tight_layout()
+plt.savefig(os.path.join(FIG_DIR, "ahp_structure.png"), dpi=150)
+plt.show()
+
+# ---- 图 2：判断矩阵热力图（数值 + 颜色深浅）----
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+plot_pairs = [
+    (A_crit, "准则层判断矩阵 A（准则对目标）", crit_labels),
+    (B_cost, "方案层判断矩阵 B2（方案对费用，修正后）", alt_labels),
+]
+im = None
+for ax, (mat, title, labels) in zip(axes, plot_pairs):
+    im = ax.imshow(mat, cmap="YlOrRd", vmin=0, vmax=5)
+    ax.set_xticks(range(mat.shape[0]), labels)
+    ax.set_yticks(range(mat.shape[0]), labels)
+    for i in range(mat.shape[0]):               # 在每个格子标注数值
+        for j in range(mat.shape[0]):
+            v = mat[i, j]
+            ax.text(j, i, f"{v:.2f}" if abs(v - round(v)) > 1e-9 else f"{v:.0f}",
+                    ha="center", va="center", fontsize=11,
+                    color="white" if v > 3 else "black")
+    ax.set_title(title, fontsize=12)
+fig.colorbar(im, ax=axes, shrink=0.85, label="重要性标度 a_ij")
+fig.suptitle("判断矩阵热力图：数值越大（颜色越深）表示越重要", fontsize=13)
+fig.subplots_adjust(top=0.86, wspace=0.25)      # 手动留出标题与 colorbar 空间
+plt.savefig(os.path.join(FIG_DIR, "ahp_matrix_heatmap.png"), dpi=150)
+plt.show()
+
+# ---- 图 3：各准则权重柱状图（标注数值）----
+fig, ax = plt.subplots(figsize=(8, 5))
+bars = ax.bar(crit_labels, w_crit, color=["#4c78a8", "#f58518", "#54a24b", "#e45756"],
+              width=0.55)
+ax.set_ylim(0, max(w_crit) * 1.2)
+ax.set_ylabel("权重")
+ax.set_title("准则层权重分布（准则对目标层）", fontsize=13)
+for bar, wv in zip(bars, w_crit):               # 柱顶标注权重数值
+    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
+            f"{wv:.4f}", ha="center", va="bottom", fontsize=11)
+ax.grid(axis="y", linestyle="--", alpha=0.5)
+plt.tight_layout()
+plt.savefig(os.path.join(FIG_DIR, "ahp_criterion_weights.png"), dpi=150)
+plt.show()
+
+# ---- 图 4：各方案层次总排序权重条形图（最终结论图）----
+fig, ax = plt.subplots(figsize=(8, 5))
+order = np.argsort(w_final)                     # 升序，横条图从上到下依次变长
+sorted_labels = [alt_labels[i] for i in order]
+sorted_w = w_final[order]
+colors = ["#54a24b" if i == order[-1] else "#4c78a8" for i in order]
+bars = ax.barh(sorted_labels, sorted_w, color=colors, height=0.5)
+ax.set_xlim(0, max(w_final) * 1.25)
+ax.set_xlabel("总排序权重（对目标层的综合得分）")
+ax.set_title("层次总排序：各方案最终得分与排名", fontsize=13)
+for bar, wv in zip(bars, sorted_w):             # 条形末端标注权重数值
+    ax.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height() / 2,
+            f"{wv:.4f}", ha="left", va="center", fontsize=11)
+ax.grid(axis="x", linestyle="--", alpha=0.5)
+plt.tight_layout()
+plt.savefig(os.path.join(FIG_DIR, "ahp_final_ranking.png"), dpi=150)
+plt.show()
+
+print("4 张图已保存到 figures/ 目录：")
+for f in ["ahp_structure.png", "ahp_matrix_heatmap.png",
+          "ahp_criterion_weights.png", "ahp_final_ranking.png"]:
+    print(f"  {os.path.join(FIG_DIR, f)}")
+print()
+print("程序运行完毕。")
+```
+
+## 七、结果解读与注意事项
+
+### 7.1 运行输出解读（以本例旅游目的地选择为例）
+
+运行第六节脚本，控制台核心输出如下（节选，完整输出请直接运行脚本）：
+
+```text
+====================================================================
+层次分析法（AHP）示例：选择最佳旅游目的地
+====================================================================
+层次结构：目标层 O（最佳旅游目的地）
+          准则层 C1 景色、C2 费用、C3 交通、C4 住宿
+          方案层 A1 杭州、A2 桂林、A3 青岛
+
+====================================================================
+【矩阵 1：准则层 C 对目标层 O（4 阶判断矩阵）】
+       C1 景色  C2 费用  C3 交通  C4 住宿
+C1 景色  1.000  3.000    5.0    4.0
+C2 费用  0.333  1.000    3.0    2.0
+C3 交通  0.200  0.333    1.0    0.5
+C4 住宿  0.250  0.500    2.0    1.0
+λmax = 4.0511，CI = 0.0170，CR = 0.0189 -> 通过（CR &lt; 0.1）
+权重（特征值法）：[0.5462 0.2323 0.0838 0.1377]
+权重（和积法）  ：[0.5423 0.2333 0.0847 0.1397]
+权重（方根法）  ：[0.545  0.2329 0.0837 0.1385]
+权重（scipy + sklearn 对照）：[0.5462 0.2323 0.0838 0.1377] （与特征值法一致）
+```
+
+逐项解读：
+
+- **准则层判断矩阵与权重**：$\lambda_{\max} = 4.0511$ 只比阶数 $m = 4$ 大 0.0511，$CR = 0.0189 &lt; 0.1$，一致性很好。特征值法给出准则权重 $w = (0.5462, 0.2323, 0.0838, 0.1377)$，即**景色权重最高（约 54.6%）**，说明决策者"看风景"的偏好压倒一切；费用次之（23.2%）；交通最不重要（8.4%）。三种求权方法结果非常接近（最大差异约 0.004），互相印证；scipy + sklearn 交叉验证与手写特征值法完全一致。
+- **一致性修正演示**（矩阵 2 初始版本）：费用准则矩阵中专家误填 $a_{12} = 2$（方向填反），导致 $\lambda_{\max} = 3.1632$、$CR = 0.1407 \ge 0.1$，程序输出"**不通过（CR >= 0.1）！！！**"并提示"**需修正判断矩阵**"；把 $a_{12}$ 改为 $1/2$ 后重算，$\lambda_{\max} = 3.0037$、$CR = 0.0032 &lt; 0.1$ 通过，费用权重为 $(0.1220, 0.2297, 0.6483)$，即青岛（最省钱）0.6483 大幅领先——修正后的权重才符合"省钱"认知。
+- **其余方案层矩阵**：景色矩阵 $CR = 0.0158$（权重：杭州 0.3196、桂林 0.5584、青岛 0.1220），交通矩阵 $CR = 0.0079$（杭州 0.5396、桂林 0.1634、青岛 0.2970），住宿矩阵 $CR = 0.0079$（杭州 0.5396、桂林 0.2970、青岛 0.1634），全部通过一致性检验。
+- **层次总排序**：
+
+```text
+【层次总排序】各方案对目标层的最终权重
+        C1 景色   C2 费用   C3 交通   C4 住宿   总排序权重
+A1 杭州  0.3196  0.1220  0.5396  0.5396  0.3224
+A2 桂林  0.5584  0.2297  0.1634  0.2970  0.4130
+A3 青岛  0.1220  0.6483  0.2970  0.1634  0.2646
+各方案最终得分与排序：
+  第 1 名：A2 桂林，总排序权重 = 0.4130
+  第 2 名：A1 杭州，总排序权重 = 0.3224
+  第 3 名：A3 青岛，总排序权重 = 0.2646
+层次总排序一致性比例 CR_总 = 0.0111 -> 通过（CR_总 &lt; 0.1）
+```
+
+- **最终结论**：**桂林以 0.4130 的总排序权重胜出**，杭州 0.3224 第二，青岛 0.2646 第三。为什么是桂林？它在权重最高的"景色"准则下得分最高（0.5584），而这一项占了 54.6% 的决策权重——"加权求和"让桂林的景色优势被充分放大。杭州虽然在交通、住宿两项上都领先，但这两项权重合计只有 22.2%，无力回天。青岛在费用上碾压（0.6483），但费用权重只有 23.2%，同样不够。这个例子生动展示了 AHP 的"权重杠杆"效应：**最终排名不是比谁单项强，而是比"强项是否踩在权重点上"**。
+- **整体一致性**：$CR_{total} = 0.0111 &lt; 0.1$，层次总排序通过整体一致性检验，结论可靠。
+
+### 7.2 四张图的解读（本例）
+
+- 图①层次结构图：三层框线自上而下、箭头清晰，"目标—准则—方案"完整对应正文的 1-4-3 结构，论文建模部分直接引用。
+- 图②判断矩阵热力图：左图"景色"行颜色最深（3、5、4 三个高值），说明景色是决策者最看重的准则；两幅图都呈"对角线为 1、上下三角颜色互补"的正互反对称形态，说明矩阵录入无误。
+- 图③准则权重柱状图：景色柱（0.5462）明显高于其他三柱，直观印证"决策者最看重景色"；四根柱高之和为 1。
+- 图④总排序条形图：绿色柱（桂林，0.4130）最长且颜色突出，是本例的最终结论图，论文结论部分直接引用。
+
+### 7.3 常见坑与应对
+
+1. **判断矩阵不一致**：$CR \ge 0.1$ 时强行使用权重是竞赛最常见的错误。应对：按第六节的流程定位矛盾元素（找违背 $a_{ik} \approx a_{ij} a_{jk}$ 最严重的项），修正后重新检验。**论文中必须报出每个矩阵的 $\lambda_{\max}$、$CI$、$CR$ 值**，只写"通过一致性检验"而不给数值会被评委扣分。
+2. **RI 表记错**：常见错误是把 $m = 3$ 的 $RI$ 记成 0.90（那是 $m = 4$ 的值），或把 $m = 1, 2$ 的 $RI$ 记成 0.58。务必按 1.5 节的标准表查值；代码里直接用字典 `RI_TABLE` 避免手查出错。
+3. **标度理解错**：把 1-9 标度当成"得分"（如给方案打 8 分），而不是"两两比较的倍数"。判断矩阵的元素永远是**比例**，不是绝对分值；且注意 $a_{ij} > 1$ 表示 $i$ **优于** $j$，方向填反会把最优方案算成最差（第六节"费用"矩阵的演示正是这个错误）。
+4. **合成权重顺序错**：层次总排序是 $w^{total} = W_{alt} \cdot w^{C}$（方案层矩阵**左乘**准则层权重），行列顺序写反会得到无意义的 $m \times m$ 矩阵。检查方法：最终权重个数应等于**方案数** $n$，且和为 1。
+5. **把准则权重当成方案得分**：准则权重只描述"指标有多重要"，方案排名必须经过层次总排序合成。直接说"景色权重最大所以选景色最好的方案"是跳步，缺少量化合成。
+6. **准则过多硬扛两两比较**：10 个准则需要 45 次比较，专家很难保持判断一致。应对：分组建立子准则层（如"经济因素""环境因素"各自带子指标），每层控制在 3~7 个元素。
+7. **主观性不交代**：AHP 的权重来自主观判断，论文必须说明打分依据（专家问卷、文献、团队讨论），并建议做**灵敏度分析**：把关键权重在 ±10% 范围内扰动，观察最终排序是否翻转；排序稳定说明结论稳健，这是国奖论文的加分项。
+8. **方法单一**：只报 AHP 的评分容易显得单薄。与熵权法组合赋权、或与 TOPSIS 串联排序，并对比两种方法的结果一致性，会让评价体系更有说服力。
+
+### 7.4 竞赛论文写作建议（话术模板）
+
+**建模段**（先讲结构、再讲矩阵、再报检验结果）：
+
+> 针对"选择最佳旅游目的地"问题，建立三层层次结构：目标层为旅游目的地选择，准则层选取景色、费用、交通、住宿 4 项指标，方案层为杭州、桂林、青岛 3 个候选城市。采用 1-9 标度对准则层构造判断矩阵 $A$，采用层次分析法确定各指标权重，构造判断矩阵并通过一致性检验（$CR = 0.019 &lt; 0.1$），计算得准则层权重为 $w = (0.546, 0.232, 0.084, 0.138)^T$，其中景色权重最高，表明决策者最看重景色因素。
+
+**方案层与总排序段**：
+
+> 对每个准则分别构造方案层判断矩阵，各矩阵一致性比例分别为 0.016、0.003、0.008、0.008，均通过一致性检验。层次总排序显示方案 B（桂林）最优（得分 0.413），杭州（0.322）次之，青岛（0.265）第三，总排序一致性比例 $CR_{total} = 0.011 &lt; 0.1$，整体通过检验。
+
+**灵敏度分析段**（加分项）：
+
+> 将准则层权重 $w_j$ 分别上下扰动 10%，重新计算层次总排序，发现桂林的总排序权重始终为三者最高，排序结果未发生翻转，说明最优方案对权重扰动不敏感，结论稳健。
+
+**与其他方法对比段**：
+
+> 进一步采用熵权法基于客观数据计算指标权重，与 AHP 权重按 $\alpha = 0.5$ 组合赋权，所得方案排序与 AHP 结果一致；并以组合权重为输入应用 TOPSIS 法，得到相同的最优方案，验证了结论的可靠性。
+
+## 八、延伸阅读
+
+1. **模糊层次分析法（FAHP）**：把判断矩阵的元素换成三角模糊数/梯形模糊数，用模糊数表达"大概重要 3 倍左右"这类不确定判断，权重求解改用模糊特征向量或几何平均，适合专家打分本身含糊的场景。竞赛中常写为"基于模糊层次分析法（FAHP）的权重确定"，是 AHP 最直接的升级。
+2. **网络层次分析法（ANP, Analytic Network Process）**：AHP 假设同层元素相互独立，现实中准则之间常常互相影响（如"价格影响销量、销量影响成本"）。ANP 允许层次内部和层次之间存在依赖与反馈，用超矩阵求解权重，是 Saaty 本人对 AHP 的推广，适合复杂的系统评价问题。
+3. **与熵权法的组合赋权**：熵权法利用数据本身的离散程度定权（指标取值差异越大、信息量越大、权重越高），与 AHP 主客观互补。组合方式有加法合成 $w = \alpha w_{AHP} + (1 - \alpha) w_{entropy}$ 和乘法合成 $w_j = w_j^{AHP} w_j^{entropy} / \sum_k w_k^{AHP} w_k^{entropy}$ 两种，竞赛论文中通常对比不同 $\alpha$ 下的结果稳健性。
+4. **群决策 AHP**：多位专家分别构造判断矩阵时，可先对各矩阵分别检验一致性、剔除不合格矩阵，再对权重取几何平均（或对矩阵元素取几何平均后统一求解），实现"群体智慧"的融合；配合德尔菲法多轮打分收敛效果更好。
+5. **AHP 与其他评价方法的串联**：AHP 定权 + TOPSIS 排序、AHP + 模糊综合评价（隶属度合成）、AHP + 灰色关联分析、AHP + VIKOR 等组合是竞赛评价类论文的常见套路，学习顺序建议：AHP → TOPSIS → 熵权法 → 模糊综合评价。
+6. **推荐资源**：Saaty T. L., *The Analytic Hierarchy Process*（1980，原始文献）；姜启源等《数学模型》（评价模型章节，竞赛经典教材）；司守奎等《数学建模算法与应用》（第 14 章层次分析法，含竞赛例题）；网络课程"运筹学-多准则决策"专题。</span></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/pomili/docs-site/tree/main/docs/algo/14_层次分析法.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href=/en/docs/algo/蚁群算法><div class=pagination-nav__sublabel>Previous</div><div class=pagination-nav__label>蚁群算法</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/en/docs/algo/TOPSIS法><div class=pagination-nav__sublabel>Next</div><div class=pagination-nav__label>TOPSIS法</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#一算法含义 class="table-of-contents__link toc-highlight">一、算法含义</a><ul><li><a href=#11-通俗理解 class="table-of-contents__link toc-highlight">1.1 通俗理解</a><li><a href=#12-三层层次结构 class="table-of-contents__link toc-highlight">1.2 三层层次结构</a><li><a href=#13-判断矩阵与-1-9-标度 class="table-of-contents__link toc-highlight">1.3 判断矩阵与 1-9 标度</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class=footer__title>文档</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/en/docs/intro>快速开始</a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>社区</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://docusaurus.io/ target=_blank rel="noopener noreferrer" class=footer__link-item>Docusaurus 官网<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><li class=footer__item><a href=https://github.com/facebook/docusaurus target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>更多</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/en/blog>博客</a><li class=footer__item><a href=https://github.com/pomili/docs-site target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div></div><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 Built with Docusaurus.</div></div></div></footer></div></body>
