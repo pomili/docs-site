@@ -30,10 +30,7 @@ $$ \boldsymbol{y} = \boldsymbol{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon} 
 
 各矩阵展开如下：
 
-$$ \underset{n \times 1}{\boldsymbol{y}} = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_n \end{bmatrix}, \quad
-\underset{n \times (p+1)}{\boldsymbol{X}} = \begin{bmatrix} 1 & x_{11} & x_{12} & \cdots & x_{1p} \\ 1 & x_{21} & x_{22} & \cdots & x_{2p} \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ 1 & x_{n1} & x_{n2} & \cdots & x_{np} \end{bmatrix}, \quad
-\underset{(p+1) \times 1}{\boldsymbol{\beta}} = \begin{bmatrix} \beta_0 \\ \beta_1 \\ \vdots \\ \beta_p \end{bmatrix}, \quad
-\underset{n \times 1}{\boldsymbol{\varepsilon}} = \begin{bmatrix} \varepsilon_1 \\ \varepsilon_2 \\ \vdots \\ \varepsilon_n \end{bmatrix} $$
+$$ \underset{n \times 1}{\boldsymbol{y}} = \begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_n \end{bmatrix}, \quad \underset{n \times (p+1)}{\boldsymbol{X}} = \begin{bmatrix} 1 & x_{11} & x_{12} & \cdots & x_{1p} \\ 1 & x_{21} & x_{22} & \cdots & x_{2p} \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ 1 & x_{n1} & x_{n2} & \cdots & x_{np} \end{bmatrix}, \quad \underset{(p+1) \times 1}{\boldsymbol{\beta}} = \begin{bmatrix} \beta_0 \\ \beta_1 \\ \vdots \\ \beta_p \end{bmatrix}, \quad \underset{n \times 1}{\boldsymbol{\varepsilon}} = \begin{bmatrix} \varepsilon_1 \\ \varepsilon_2 \\ \vdots \\ \varepsilon_n \end{bmatrix} $$
 
 注意：设计矩阵 $\boldsymbol{X}$ 的**第一列全为 1**，对应截距 $\beta_0$；第二列起才是 $p$ 个特征的取值。因此 $\boldsymbol{X}$ 是 $n$ 行、$p+1$ 列。
 
@@ -258,6 +255,18 @@ $$ RMSE = \sqrt{\frac{1}{n}\sum_{i=1}^{n} e_i^2}, \qquad MAE = \frac{1}{n}\sum_{
 | ④ 系数估计 ±95%CI 森林图 | 展示每个系数的估计值与不确定性 | 横线区间越窄估计越精确；区间跨过竖线 0 → 该系数不显著；共线性变量的区间明显更宽 |
 | ⑤ 特征相关性热力图 | 快速发现变量之间的共线性 | 非对角块颜色越深（$|r|$ 接近 1）相关越强；与图 ⑥ 配合：相关强 + VIF 大 → 共线性实锤 |
 | ⑥ VIF 柱状图 | 量化每个特征的共线性程度 | 柱高超过 VIF=10 红虚线即严重共线性，对应系数解释需谨慎；全部低于 5 则放心解释 |
+
+![图① 实际值-预测值散点图](./figures/mlr_actual_pred.png)
+
+![图② 残差-拟合值散点图](./figures/mlr_residual_fitted.png)
+
+![图③ 残差 QQ 图](./figures/mlr_residual_qq.png)
+
+![图④ 系数估计 ±95%CI 森林图](./figures/mlr_coef_ci.png)
+
+![图⑤ 特征相关性热力图](./figures/mlr_corr_heatmap.png)
+
+![图⑥ VIF 柱状图](./figures/mlr_vif_bar.png)
 
 ### 4.2 好图与异常图特征（诊断速查）
 

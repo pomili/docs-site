@@ -247,6 +247,15 @@ KNN 的可视化围绕三个主题：**K 选多少、边界长什么样、邻居
 | ③ 邻居示意散点图（`knn_neighbor_vote.png`） | 展示"距离 + 投票"的全过程：待分类点（金色星形）与 K 个最近邻的连线、各邻居类别、投票结果 | 从星形点出发的 K 条灰线连向 K 个最近邻（黑圈标注）；标题给出**正负类票数**与最终预测；本例选择"最纠结"的测试点（预测概率最接近 0.5），投票 3:2 险胜，最能体现 KNN 的决策机制 |
 | ④ 混淆矩阵热力图（`knn_confusion_matrix.png`） | 展示最终模型（最优 K）在测试集上的错误结构：分对了多少、误报/漏报各多少 | 对角线块（TN、TP）颜色深、数字大——大部分分对；副对角块的数字代表误报（FP）与漏报（FN），**比较两者大小**可判断模型是"冤枉型"还是"漏放型"；本例 FP=2、FN=4，漏报略多 |
 
+![图①](./figures/knn_k_accuracy_curve.png)
+
+![图②](./figures/knn_decision_boundary_panel.png)
+
+![图③](./figures/knn_neighbor_vote.png)
+
+![图④](./figures/knn_confusion_matrix.png)
+
+
 > 绘图说明：图中文字需中文字体支持，程序开头统一设置 `PingFang SC`（macOS 自带）+ `axes.unicode_minus=False`（防止负号显示为方块），并 `os.makedirs("figures", exist_ok=True)` 先建目录，每张图 `savefig` 后 `plt.show()`。
 
 ## 五、符号说明

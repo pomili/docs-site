@@ -247,6 +247,16 @@ $$\hat{\beta}_j \pm t_{\alpha/2}(n-2) \cdot \text{SE}(\hat{\beta}_j), \quad j = 
 | ④ 残差-自变量散点图（`slr_resid_x.png`） | 检验 $x$ 与残差是否还有系统性关系 | 与图②互补：好的图形同样是无形状的随机散布；若 $x$ 增大时残差出现趋势或发散，说明模型遗漏了 $x$ 的某些信息 |
 | ⑤ 实际值-预测值散点 + 对角线（`slr_actual_pred.png`） | 检验模型整体预测能力 | 好的图形：点紧贴 $y=\hat{y}$ 对角线；点在对角线下方 = 预测偏高；点整体偏移或发散 = 模型有系统偏差 |
 
+![图① 散点 + 回归直线 + 95% 置信带 + 95% 预测带](./figures/slr_fit_with_bands.png)
+
+![图② 残差-拟合值散点图](./figures/slr_resid_fitted.png)
+
+![图③ 残差 QQ 图](./figures/slr_resid_qq.png)
+
+![图④ 残差-自变量散点图](./figures/slr_resid_x.png)
+
+![图⑤ 实际值-预测值散点图](./figures/slr_actual_pred.png)
+
 ### 4.2 每张图"好"与"异常"的特征
 
 **图① 散点 + 回归直线 + 置信带 + 预测带**

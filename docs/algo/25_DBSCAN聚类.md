@@ -244,6 +244,15 @@ DBSCAN 的"参数敏感"特性决定了它的论证必须**以图说话**：k-�
 | ③ eps 参数对比面板（`db_eps_compare.png`） | 直观展示 eps 过大/合适/过小的后果（敏感性分析） | 左图（eps 过小）簇碎成十几块、黑叉满天；中图（合适）3 簇 + 40 噪声干净利落；右图（eps 过大）所有点并成一团、噪声消失——一眼看懂"参数敏感"的含义 |
 | ④ K-means vs DBSCAN 同数据对比（`db_kmeans_vs.png`） | 论证"非凸数据为何选 DBSCAN" | 左图 K-means：月牙的弯钩处被直线决策边界切错、40 个离群点被强行染成簇的颜色；右图 DBSCAN：三个月牙/环形完整、噪声全部用叉号挑出——方法选型的决定性证据 |
 
+![图①](./figures/db_result.png)
+
+![图②](./figures/db_kdist.png)
+
+![图③](./figures/db_eps_compare.png)
+
+![图④](./figures/db_kmeans_vs.png)
+
+
 ### 4.2 每张图"好"与"异常"的特征
 
 **图① DBSCAN 聚类结果散点图**
